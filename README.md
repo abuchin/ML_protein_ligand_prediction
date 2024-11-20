@@ -4,7 +4,7 @@
 ![](/images/RF_image.png)
 
 ## **Project Description**
-This project focuses on developing a machine learning pipeline to predict binding affinities between protein-ligand pairs, leveraging provided UniProt and PubChem IDs. The approach includes exploratory data analysis, feature extraction, model training, and evaluation. The goal is to accurately predict binding affinities on a held-out test set using open-source libraries, while ensuring modular, reproducible, and well-documented code.
+This project focuses on developing a machine learning pipeline to predict binding affinities between protein-ligand pairs, leveraging provided UniProt and PubChem IDs. The approach includes exploratory data analysis, feature extraction, model training, and evaluation. The goal is to accurately predict binding affinities on a held-out test set using open-source libraries, while ensuring modular, reproducible, and well-documented code. The scientific project description is present in Summary folder.
 
 ### **Problem Statement**
 The problem aims to:
