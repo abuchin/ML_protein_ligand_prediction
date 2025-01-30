@@ -23,12 +23,13 @@ The problem aims to:
 1. Perform exploratory data analysis (EDA) and clean the dataset.
 2. Generate synthetic negative examples by creating non-binding protein-ligand pairs.
 3. Extract features for proteins using UniProt UniRep and ligands using PubChem data.
-4. Save the processed dataset for downstream modeling.
+4. Generates low-dimensional representation of proteins using Protein-Bert model and Morgan Fingerprints for ligands.
+5. Saves the processed dataset for downstream modeling.
 
 #### **Key Steps**
 - **EDA and Cleaning**: Handle duplicates and inconsistencies in the dataset.
 - **Feature Extraction**:
-  - **Proteins**: Extract embeddings using UniRep.
+  - **Proteins**: Extract embeddings using Protein-Bert model.
   - **Ligands**: Generate molecular fingerprints using RDKit and PubChemPy.
 - **Output**:
   - A cleaned and feature-enriched dataset ready for model training.
@@ -47,7 +48,7 @@ The problem aims to:
 
 #### **Key Steps**
 - **Model Training**:
-  - Train models using scikit-learn, XGBoost, and PyTorch.
+  - Train models using scikit-learn, XGBoost, and PyTorch on low-dimensional protein and Morgan Fingerprint representation.
 - **Evaluation**:
   - Use accuracy, precision, recall, and F1 score metrics.
   - Visualize performance comparisons across models.
