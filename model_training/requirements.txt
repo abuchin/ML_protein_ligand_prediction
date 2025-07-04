@@ -1,0 +1,17 @@
+# Core data science libraries
+pandas>=1.5.0
+numpy>=1.21.0
+matplotlib>=3.5.0
+seaborn>=0.11.0
+
+# Machine learning libraries
+scikit-learn>=1.1.0
+xgboost>=1.6.0
+torch>=1.12.0
+
+# Visualization
+plotly>=5.0.0
+
+# Utilities
+joblib>=1.1.0
+pathlib2>=2.3.7 
