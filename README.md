@@ -15,6 +15,10 @@ The problem aims to:
 
 ---
 
+### **Detailed scripts**
+Extendable production-ready pipeline is present in data_prep and model_training folders. Use the notebooks as a guide for experimental workflow. The main workflow parts (data_prep and model_training)
+are present in the corresponding folders.
+
 ## **Workflow Overview**
 
 ### **Notebook 1: Data Preparation (`ML_protein_binnding_data_prep.ipynb`)**
