@@ -1,0 +1,198 @@
+{
+  "logistic_regression": {
+    "accuracy": 1.0,
+    "f1_binary": 1.0,
+    "f1_macro": 1.0,
+    "precision_binary": 1.0,
+    "recall_binary": 1.0,
+    "confusion_matrix": [
+      [
+        314,
+        0
+      ],
+      [
+        0,
+        285
+      ]
+    ],
+    "roc_auc": 1.0,
+    "pr_auc": 1.0
+  },
+  "random_forest": {
+    "accuracy": 1.0,
+    "f1_binary": 1.0,
+    "f1_macro": 1.0,
+    "precision_binary": 1.0,
+    "recall_binary": 1.0,
+    "confusion_matrix": [
+      [
+        314,
+        0
+      ],
+      [
+        0,
+        285
+      ]
+    ],
+    "roc_auc": 0.9999999999999999,
+    "pr_auc": 1.0
+  },
+  "xgboost": {
+    "accuracy": 0.9599332220367279,
+    "f1_binary": 0.958041958041958,
+    "f1_macro": 0.9598516499474965,
+    "precision_binary": 0.9547038327526133,
+    "recall_binary": 0.9614035087719298,
+    "confusion_matrix": [
+      [
+        301,
+        13
+      ],
+      [
+        11,
+        274
+      ]
+    ],
+    "roc_auc": 0.9957537154989384,
+    "pr_auc": 0.9950259552323775
+  },
+  "lightgbm": {
+    "accuracy": 0.9649415692821369,
+    "f1_binary": 0.9630931458699473,
+    "f1_macro": 0.9648534091829863,
+    "precision_binary": 0.9647887323943662,
+    "recall_binary": 0.9614035087719298,
+    "confusion_matrix": [
+      [
+        304,
+        10
+      ],
+      [
+        11,
+        274
+      ]
+    ],
+    "roc_auc": 0.9973069616716952,
+    "pr_auc": 0.997127853077202
+  },
+  "cv_logistic_regression": {
+    "f1_macro": {
+      "mean": 0.5258655329948592,
+      "std": 0.02129786857476328
+    },
+    "roc_auc": {
+      "mean": 0.534315549529443,
+      "std": 0.022805948636180958
+    },
+    "average_precision": {
+      "mean": 0.5292733211183882,
+      "std": 0.028977910047228255
+    }
+  },
+  "cold_start": {
+    "model": {
+      "0": "logistic_regression",
+      "1": "logistic_regression",
+      "2": "logistic_regression",
+      "3": "logistic_regression",
+      "4": "logistic_regression",
+      "5": "logistic_regression",
+      "6": "random_forest",
+      "7": "random_forest",
+      "8": "random_forest",
+      "9": "random_forest",
+      "10": "random_forest",
+      "11": "random_forest",
+      "12": "xgboost",
+      "13": "xgboost",
+      "14": "xgboost",
+      "15": "xgboost",
+      "16": "xgboost",
+      "17": "xgboost",
+      "18": "lightgbm",
+      "19": "lightgbm",
+      "20": "lightgbm",
+      "21": "lightgbm",
+      "22": "lightgbm",
+      "23": "lightgbm"
+    },
+    "split_type": {
+      "0": "cold_protein",
+      "1": "cold_protein",
+      "2": "cold_protein",
+      "3": "cold_protein",
+      "4": "cold_protein",
+      "5": "cold_protein",
+      "6": "cold_protein",
+      "7": "cold_protein",
+      "8": "cold_protein",
+      "9": "cold_protein",
+      "10": "cold_protein",
+      "11": "cold_protein",
+      "12": "cold_protein",
+      "13": "cold_protein",
+      "14": "cold_protein",
+      "15": "cold_protein",
+      "16": "cold_protein",
+      "17": "cold_protein",
+      "18": "cold_protein",
+      "19": "cold_protein",
+      "20": "cold_protein",
+      "21": "cold_protein",
+      "22": "cold_protein",
+      "23": "cold_protein"
+    },
+    "metric": {
+      "0": "roc_auc",
+      "1": "pr_auc",
+      "2": "f1_binary",
+      "3": "ef_at_1pct",
+      "4": "ef_at_5pct",
+      "5": "bedroc",
+      "6": "roc_auc",
+      "7": "pr_auc",
+      "8": "f1_binary",
+      "9": "ef_at_1pct",
+      "10": "ef_at_5pct",
+      "11": "bedroc",
+      "12": "roc_auc",
+      "13": "pr_auc",
+      "14": "f1_binary",
+      "15": "ef_at_1pct",
+      "16": "ef_at_5pct",
+      "17": "bedroc",
+      "18": "roc_auc",
+      "19": "pr_auc",
+      "20": "f1_binary",
+      "21": "ef_at_1pct",
+      "22": "ef_at_5pct",
+      "23": "bedroc"
+    },
+    "value": {
+      "0": 1.0,
+      "1": 1.0,
+      "2": 1.0,
+      "3": 2.101754385964912,
+      "4": 2.101754385964912,
+      "5": 1.0,
+      "6": 0.9999999999999999,
+      "7": 1.0,
+      "8": 1.0,
+      "9": 2.101754385964912,
+      "10": 2.101754385964912,
+      "11": 1.0,
+      "12": 0.9957537154989384,
+      "13": 0.9950259552323775,
+      "14": 0.958041958041958,
+      "15": 2.101754385964912,
+      "16": 2.101754385964912,
+      "17": 0.9950259552323775,
+      "18": 0.9973069616716952,
+      "19": 0.997127853077202,
+      "20": 0.9630931458699473,
+      "21": 2.101754385964912,
+      "22": 2.101754385964912,
+      "23": 0.997127853077202
+    }
+  }
+}
