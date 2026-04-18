@@ -2,6 +2,7 @@
 Multi-Layer Perceptron (MLP) model for protein-ligand binding prediction using PyTorch.
 """
 
+import copy
 import torch
 import torch.nn as nn
 import torch.optim as optim
@@ -9,81 +10,48 @@ from torch.utils.data import Dataset, DataLoader
 import numpy as np
 import logging
 from typing import Tuple
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import StandardScaler
 from .base_model import BaseModel
 
 logger = logging.getLogger(__name__)
 
 
-class MyDataset(Dataset):
-    """Custom dataset for PyTorch."""
-    
+class _BindingDataset(Dataset):
     def __init__(self, X, y):
-        """
-        Initialize the dataset.
-        
-        Args:
-            X: Feature array
-            y: Target array
-        """
-        self.X = torch.FloatTensor(X.values if hasattr(X, 'values') else X)
-        self.y = torch.LongTensor(y.values if hasattr(y, 'values') else y)
-    
+        self.X = torch.FloatTensor(X if isinstance(X, np.ndarray) else X.values)
+        self.y = torch.LongTensor(y if isinstance(y, np.ndarray) else y.values)
+
     def __len__(self):
         return len(self.X)
-    
+
     def __getitem__(self, idx):
         return self.X[idx], self.y[idx]
 
 
 class MLP(nn.Module):
-    """Multi-Layer Perceptron neural network."""
-    
     def __init__(self, input_size, hidden_size, output_size):
-        """
-        Initialize the MLP.
-        
-        Args:
-            input_size: Number of input features
-            hidden_size: Number of hidden units
-            output_size: Number of output classes
-        """
-        super(MLP, self).__init__()
-        self.fc1 = nn.Linear(input_size, hidden_size)
-        self.relu = nn.ReLU()
-        self.dropout = nn.Dropout(0.3)
-        self.fc2 = nn.Linear(hidden_size, hidden_size // 2)
-        self.fc3 = nn.Linear(hidden_size // 2, output_size)
-    
+        super().__init__()
+        self.net = nn.Sequential(
+            nn.Linear(input_size, hidden_size),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(hidden_size, hidden_size // 2),
+            nn.ReLU(),
+            nn.Dropout(0.3),
+            nn.Linear(hidden_size // 2, output_size),
+        )
+
     def forward(self, x):
-        """Forward pass through the network."""
-        x = self.fc1(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-        x = self.fc2(x)
-        x = self.relu(x)
-        x = self.dropout(x)
-        x = self.fc3(x)
-        return x
+        return self.net(x)
 
 
 class MLPModel(BaseModel):
-    """MLP model implementation using PyTorch."""
-    
-    def __init__(self, input_size, hidden_size=256, output_size=2, batch_size=32, 
-                 learning_rate=0.001, epochs=10, test_size=0.2, random_state=42):
-        """
-        Initialize the MLP model.
-        
-        Args:
-            input_size: Number of input features
-            hidden_size: Number of hidden units
-            output_size: Number of output classes
-            batch_size: Batch size for training
-            learning_rate: Learning rate
-            epochs: Number of training epochs
-            test_size: Fraction of data to use for testing
-            random_state: Random seed for reproducibility
-        """
+    """MLP model implementation using PyTorch with early stopping."""
+
+    def __init__(self, input_size, hidden_size=256, output_size=2, batch_size=32,
+                 learning_rate=0.001, epochs=50, patience=5,
+                 test_size=0.2, random_state=42):
         super().__init__("MLP", test_size, random_state)
         self.input_size = input_size
         self.hidden_size = hidden_size
@@ -91,142 +59,144 @@ class MLPModel(BaseModel):
         self.batch_size = batch_size
         self.learning_rate = learning_rate
         self.epochs = epochs
+        self.patience = patience
         self.device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-        
-        # Initialize model components
+
         self.model = MLP(input_size, hidden_size, output_size).to(self.device)
         self.optimizer = optim.Adam(self.model.parameters(), lr=learning_rate)
         self.loss_fn = nn.CrossEntropyLoss()
-        
-        # Data loaders
+
         self.train_loader = None
         self.test_loader = None
-    
+        self._val_loader = None
+
     def _initialize_model(self, **kwargs):
-        """Not used for MLP as model is initialized in __init__."""
-        pass
-    
-    def split_data(self, X, y):
-        """
-        Split data and create PyTorch data loaders.
-        
-        Args:
-            X: Feature DataFrame
-            y: Target Series
-        """
-        from sklearn.model_selection import train_test_split
-        
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, stratify=y, test_size=self.test_size, random_state=self.random_state
+        pass  # initialised in __init__
+
+    def split_data(self, X, y) -> None:
+        """Split into train/val/test, apply StandardScaler fitted on train only."""
+        X_arr = X.values if hasattr(X, 'values') else np.array(X)
+        y_arr = y.values if hasattr(y, 'values') else np.array(y)
+
+        # 80 % train+val / 20 % test
+        X_tv, X_test, y_tv, y_test = train_test_split(
+            X_arr, y_arr, stratify=y_arr,
+            test_size=self.test_size, random_state=self.random_state
         )
-        
-        # Create datasets and data loaders
-        self.train_dataset = MyDataset(X_train, y_train)
-        self.test_dataset = MyDataset(X_test, y_test)
-        self.train_loader = DataLoader(self.train_dataset, batch_size=self.batch_size, shuffle=True)
-        self.test_loader = DataLoader(self.test_dataset, batch_size=self.batch_size, shuffle=False)
-        
-        # Store for evaluation
+        # 10 % of train+val → validation (for early stopping)
+        X_train, X_val, y_train, y_val = train_test_split(
+            X_tv, y_tv, stratify=y_tv,
+            test_size=0.1, random_state=self.random_state
+        )
+
+        self.scaler = StandardScaler()
+        X_train = self.scaler.fit_transform(X_train)
+        X_val = self.scaler.transform(X_val)
+        X_test = self.scaler.transform(X_test)
+
         self.X_train = X_train
         self.X_test = X_test
         self.y_train = y_train
         self.y_test = y_test
-        
-        logger.info(f"Data split: {len(X_train)} train, {len(X_test)} test")
-    
-    def _train_model(self):
-        """Train the MLP model."""
-        self.model.train()
-        for epoch in range(self.epochs):
-            total_loss = 0
-            for batch_idx, (data, target) in enumerate(self.train_loader):
+
+        self.train_loader = DataLoader(
+            _BindingDataset(X_train, y_train), batch_size=self.batch_size, shuffle=True
+        )
+        self._val_loader = DataLoader(
+            _BindingDataset(X_val, y_val), batch_size=self.batch_size, shuffle=False
+        )
+        self.test_loader = DataLoader(
+            _BindingDataset(X_test, y_test), batch_size=self.batch_size, shuffle=False
+        )
+
+        logger.info(
+            f"MLP data split: {len(X_train)} train / {len(X_val)} val / {len(X_test)} test — "
+            f"StandardScaler applied"
+        )
+
+    def _eval_loss(self, loader) -> float:
+        self.model.eval()
+        total = 0.0
+        with torch.no_grad():
+            for data, target in loader:
                 data, target = data.to(self.device), target.to(self.device)
-                
+                total += self.loss_fn(self.model(data), target).item()
+        return total / len(loader)
+
+    def _train_model(self) -> None:
+        best_val_loss = float('inf')
+        patience_counter = 0
+        best_state = copy.deepcopy(self.model.state_dict())
+
+        for epoch in range(self.epochs):
+            self.model.train()
+            train_loss = 0.0
+            for data, target in self.train_loader:
+                data, target = data.to(self.device), target.to(self.device)
                 self.optimizer.zero_grad()
-                output = self.model(data)
-                loss = self.loss_fn(output, target)
+                loss = self.loss_fn(self.model(data), target)
                 loss.backward()
                 self.optimizer.step()
-                
-                total_loss += loss.item()
-            
-            if (epoch + 1) % 5 == 0:
-                logger.info(f"Epoch {epoch+1}/{self.epochs}, Loss: {total_loss/len(self.train_loader):.4f}")
-    
+                train_loss += loss.item()
+
+            val_loss = self._eval_loss(self._val_loader)
+            logger.info(
+                f"Epoch {epoch+1}/{self.epochs}  "
+                f"train_loss={train_loss/len(self.train_loader):.4f}  "
+                f"val_loss={val_loss:.4f}"
+            )
+
+            if val_loss < best_val_loss:
+                best_val_loss = val_loss
+                best_state = copy.deepcopy(self.model.state_dict())
+                patience_counter = 0
+            else:
+                patience_counter += 1
+                if patience_counter >= self.patience:
+                    logger.info(f"Early stopping at epoch {epoch+1} (patience={self.patience})")
+                    break
+
+        self.model.load_state_dict(best_state)
+        logger.info(f"Restored best model weights (val_loss={best_val_loss:.4f})")
+
     def _predict_model(self) -> np.ndarray:
-        """
-        Make predictions using the trained model.
-        
-        Returns:
-            Predictions array
-        """
         self.model.eval()
-        y_pred = []
-        
+        preds = []
         with torch.no_grad():
-            for data, target in self.test_loader:
-                data, target = data.to(self.device), target.to(self.device)
-                output = self.model(data)
-                _, predicted = torch.max(output, 1)
-                y_pred.extend(predicted.cpu().numpy())
-        
-        return np.array(y_pred)
-    
+            for data, _ in self.test_loader:
+                data = data.to(self.device)
+                _, predicted = torch.max(self.model(data), 1)
+                preds.extend(predicted.cpu().numpy())
+        return np.array(preds)
+
     def predict_proba(self) -> np.ndarray:
-        """
-        Get prediction probabilities.
-        
-        Returns:
-            Probability predictions array
-        """
         self.model.eval()
-        probabilities = []
-        
+        probs = []
         with torch.no_grad():
-            for data, target in self.test_loader:
-                data, target = data.to(self.device), target.to(self.device)
-                output = self.model(data)
-                probs = torch.softmax(output, dim=1)
-                probabilities.extend(probs.cpu().numpy())
-        
-        return np.array(probabilities)
-    
+            for data, _ in self.test_loader:
+                data = data.to(self.device)
+                probs.extend(torch.softmax(self.model(data), dim=1).cpu().numpy())
+        return np.array(probs)
+
     def save_model(self, path: str) -> None:
-        """
-        Save the trained model to disk.
-        
-        Args:
-            path: Path where to save the model
-        """
         torch.save(self.model.state_dict(), path)
         logger.info(f"MLP model saved to {path}")
-    
+
     def load_model(self, path: str) -> None:
-        """
-        Load a trained model from disk.
-        
-        Args:
-            path: Path to the saved model
-        """
         self.model.load_state_dict(torch.load(path, map_location=self.device))
         self.model.to(self.device)
         logger.info(f"MLP model loaded from {path}")
-    
+
     def get_model_info(self) -> dict:
-        """
-        Get extended model information including hyperparameters.
-        
-        Returns:
-            Dictionary with model information
-        """
-        base_info = super().get_model_info()
-        base_info.update({
+        info = super().get_model_info()
+        info.update({
             'input_size': self.input_size,
             'hidden_size': self.hidden_size,
             'output_size': self.output_size,
             'batch_size': self.batch_size,
             'learning_rate': self.learning_rate,
             'epochs': self.epochs,
-            'device': str(self.device)
+            'patience': self.patience,
+            'device': str(self.device),
         })
-        return base_info 
+        return info
