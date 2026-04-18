@@ -1,0 +1,130 @@
+#!/usr/bin/env python3
+"""Model training pipeline: load features → split → train → evaluate → save.
+
+Usage:
+    python scripts/run_training.py
+    python scripts/run_training.py --split cold_protein   # recommended
+    python scripts/run_training.py --split random         # baseline comparison
+    python scripts/run_training.py --tune                 # enable HP tuning
+    python scripts/run_training.py --n_samples 1000       # fast dev run
+"""
+from __future__ import annotations
+
+import argparse
+import logging
+import pickle
+import sys
+from pathlib import Path
+
+import numpy as np
+import pandas as pd
+import scipy.sparse as sp
+
+sys.path.insert(0, str(Path(__file__).parent.parent / "src"))
+
+from plbind.config import CFG
+from plbind.features.feature_builder import FeatureBuilder
+from plbind.training.pipeline import TrainingPipeline
+from plbind.utils.logging import setup_logging
+from plbind.utils.seed import set_all_seeds
+
+
+def parse_args() -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description="Protein-ligand model training")
+    parser.add_argument(
+        "--split",
+        choices=["random", "cold_protein", "cold_ligand", "scaffold", "cold_both"],
+        default="cold_protein",
+        help="Train/test split strategy (default: cold_protein)",
+    )
+    parser.add_argument("--tune", action="store_true", help="Run hyperparameter tuning")
+    parser.add_argument("--n_samples", type=int, default=None)
+    parser.add_argument("--log_level", default="INFO")
+    return parser.parse_args()
+
+
+def load_processed_data(processed_dir: Path) -> tuple:
+    """Load all pre-computed feature files from disk."""
+    combined = pd.read_csv(processed_dir / "combined_data.csv")
+
+    with (processed_dir / "protein_embeddings.pkl").open("rb") as f:
+        protein_embeddings: dict = pickle.load(f)
+
+    with (processed_dir / "cid_to_row.pkl").open("rb") as f:
+        cid_to_row: dict = pickle.load(f)
+
+    fp_matrix = sp.load_npz(processed_dir / "ligand_fp.npz")
+    desc_matrix = np.load(processed_dir / "ligand_desc.npy")
+
+    aux_features = None
+    aux_path = processed_dir / "aux_features.csv"
+    if aux_path.exists():
+        aux_features = pd.read_csv(aux_path, index_col="UniProt_ID")
+
+    return combined, protein_embeddings, cid_to_row, fp_matrix, desc_matrix, aux_features
+
+
+def main() -> None:
+    args = parse_args()
+    setup_logging(CFG.outputs_dir / "logs", level=args.log_level)
+    set_all_seeds(CFG.random_seed)
+    logger = logging.getLogger(__name__)
+
+    logger.info("=== Training Pipeline START ===")
+    logger.info("Split: %s | tune: %s | n_samples: %s", args.split, args.tune, args.n_samples)
+
+    # ── Load data ─────────────────────────────────────────────────────────────
+    combined, protein_embeddings, cid_to_row, fp_matrix, desc_matrix, aux_features = \
+        load_processed_data(CFG.processed_dir)
+    logger.info("Loaded %d rows, %d proteins, %d ligands.", len(combined),
+                len(protein_embeddings), fp_matrix.shape[0])
+
+    # ── Build feature matrix ──────────────────────────────────────────────────
+    builder = FeatureBuilder(
+        protein_embeddings=protein_embeddings,
+        cid_to_row=cid_to_row,
+        fp_matrix=fp_matrix,
+        desc_matrix=desc_matrix,
+        aux_features=aux_features,
+    )
+
+    X, y, block_map = builder.build(combined, log_attrition=True)
+    protein_block, ligand_block, aux_block, _ = builder.build_blocks(combined)
+    feature_names = builder.feature_names
+
+    logger.info("Feature matrix: %s  (protein=%d, ligand=%d, aux=%d)",
+                X.shape, builder.protein_dim, builder.ligand_dim, builder.aux_dim)
+
+    # ── Run pipeline ──────────────────────────────────────────────────────────
+    pipeline = TrainingPipeline(
+        X=X,
+        y=y,
+        df=combined,
+        block_map=block_map,
+        feature_names=feature_names,
+        protein_block=protein_block,
+        ligand_block=ligand_block,
+        aux_block=aux_block,
+        split_strategy=args.split,
+        random_seed=CFG.random_seed,
+        n_samples=args.n_samples,
+        tune=args.tune,
+        output_dir=CFG.outputs_dir,
+    )
+
+    results = pipeline.run()
+    logger.info("=== Training Pipeline DONE ===")
+
+    # Print summary table
+    scalar_results = {k: v for k, v in results.items()
+                      if isinstance(v, dict) and "pr_auc" in v}
+    if scalar_results:
+        import pandas as pd
+        from plbind.evaluation.evaluator import ModelEvaluator
+        comparison = ModelEvaluator.compare_models(scalar_results)
+        print("\n=== Model Comparison ===")
+        print(comparison[["pr_auc", "roc_auc", "f1_binary", "accuracy"]].to_string())
+
+
+if __name__ == "__main__":
+    main()
