@@ -170,7 +170,12 @@ class InteractionMLPModel(BaseModel):
         self.patience = patience
 
         if device == "auto":
-            self._device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
+            if torch.cuda.is_available():
+                self._device = torch.device("cuda")
+            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
+                self._device = torch.device("mps")
+            else:
+                self._device = torch.device("cpu")
         else:
             self._device = torch.device(device)
 
@@ -254,7 +259,8 @@ class InteractionMLPModel(BaseModel):
         optimizer = torch.optim.Adam(self._net.parameters(), lr=self.lr, weight_decay=1e-5)
         scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.5)
         criterion = FocalLoss(gamma=2.0, alpha=0.25)
-        scaler = torch.cuda.amp.GradScaler() if self._device.type == "cuda" else None
+        use_amp = self._device.type == "cuda"
+        scaler = torch.cuda.amp.GradScaler() if use_amp else None
 
         best_val_loss = float("inf")
         patience_counter = 0
@@ -279,6 +285,7 @@ class InteractionMLPModel(BaseModel):
                     logits = self._net(prot, lig, aux_input)
                     loss = criterion(logits, labels)
                     loss.backward()
+                    torch.nn.utils.clip_grad_norm_(self._net.parameters(), max_norm=1.0)
                     optimizer.step()
                 total_loss += loss.item()
 
@@ -293,7 +300,7 @@ class InteractionMLPModel(BaseModel):
             else:
                 patience_counter += 1
 
-            if epoch % 10 == 0 or patience_counter == 0:
+            if True:  # log every epoch for visibility
                 lr_current = optimizer.param_groups[0]["lr"]
                 logger.info(
                     "Epoch %3d/%d  train_loss=%.4f  val_loss=%.4f  patience=%d  lr=%.2e",
@@ -306,7 +313,7 @@ class InteractionMLPModel(BaseModel):
                 break
 
         # Restore best weights
-        self._net.load_state_dict(torch.load(best_state_path, map_location=self._device))
+        self._net.load_state_dict(torch.load(best_state_path, map_location=self._device, weights_only=True))
         best_state_path.unlink(missing_ok=True)
 
     def _evaluate_loss(self, dl: DataLoader, criterion: nn.Module) -> float:
@@ -364,7 +371,7 @@ class InteractionMLPModel(BaseModel):
         self._lig_scaler = artifact.get("lig_scaler")
         self._aux_scaler = artifact.get("aux_scaler")
         self._net = self._initialize_model()
-        self._net.load_state_dict(torch.load(path.with_suffix(".pt"), map_location=self._device))
+        self._net.load_state_dict(torch.load(path.with_suffix(".pt"), map_location=self._device, weights_only=True))
         self._net.eval()
         logger.info("InteractionMLP loaded from %s", path)
 
