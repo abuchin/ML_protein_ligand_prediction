@@ -216,18 +216,19 @@ class LigandEncoder:
         return arr
 
     def _descriptors(self, mol) -> np.ndarray:
-        from rdkit.Chem import Descriptors, QED, rdMolDescriptors
+        from rdkit.Chem import Descriptors, QED
+        from rdkit.Chem import rdMolDescriptors
         from rdkit.Chem.rdPartialCharges import ComputeGasteigerCharges
 
         ComputeGasteigerCharges(mol)
-        charges = [atom.GetDoubleProp("_GasteigerCharge") for atom in mol.GetAtoms()
-                   if not (atom.GetDoubleProp("_GasteigerCharge") != atom.GetDoubleProp("_GasteigerCharge"))]
+        charges = [atom.GetDoubleProp("_GasteigerCharge") for atom in mol.GetAtoms()]
+        # Filter out NaN and inf produced by Gasteiger convergence failures
+        charges = [c for c in charges if np.isfinite(c)]
 
-        max_charge = max(charges) if charges else 0.0
-        min_charge = min(charges) if charges else 0.0
+        max_charge = float(np.clip(max(charges), -5, 5)) if charges else 0.0
+        min_charge = float(np.clip(min(charges), -5, 5)) if charges else 0.0
 
-        stereo_info = rdMolDescriptors.FindPotentialStereo(mol)
-        n_stereo = sum(1 for s in stereo_info if s.type.name == "Atom")
+        n_stereo = rdMolDescriptors.CalcNumAtomStereoCenters(mol)
 
         values = [
             Descriptors.MolWt(mol),

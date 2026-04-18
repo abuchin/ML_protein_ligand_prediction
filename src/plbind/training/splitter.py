@@ -103,7 +103,8 @@ class Splitter:
         """
         proteins = self._stratify_entities(df, group_col="UniProt_ID")
         test_proteins, train_val_proteins = self._entity_split(proteins, self.test_size)
-        val_proteins, train_proteins = self._entity_split(train_val_proteins, self.val_size)
+        train_val_df = proteins[proteins["UniProt_ID"].isin(train_val_proteins)]
+        val_proteins, train_proteins = self._entity_split(train_val_df, self.val_size)
 
         test = df[df["UniProt_ID"].isin(test_proteins)]
         val = df[df["UniProt_ID"].isin(val_proteins)]
@@ -114,7 +115,8 @@ class Splitter:
         """No pubchem_cid appears in more than one partition."""
         ligands = self._stratify_entities(df, group_col="pubchem_cid")
         test_ligs, train_val_ligs = self._entity_split(ligands, self.test_size)
-        val_ligs, train_ligs = self._entity_split(train_val_ligs, self.val_size)
+        train_val_df = ligands[ligands["pubchem_cid"].isin(train_val_ligs)]
+        val_ligs, train_ligs = self._entity_split(train_val_df, self.val_size)
 
         test = df[df["pubchem_cid"].isin(test_ligs)]
         val = df[df["pubchem_cid"].isin(val_ligs)]
@@ -137,7 +139,8 @@ class Splitter:
 
         scaffold_entities = self._stratify_entities(df, group_col="_scaffold")
         test_sc, train_val_sc = self._entity_split(scaffold_entities, self.test_size)
-        val_sc, train_sc = self._entity_split(train_val_sc, self.val_size)
+        train_val_df = scaffold_entities[scaffold_entities["_scaffold"].isin(train_val_sc)]
+        val_sc, train_sc = self._entity_split(train_val_df, self.val_size)
 
         test = df[df["_scaffold"].isin(test_sc)].drop(columns="_scaffold")
         val = df[df["_scaffold"].isin(val_sc)].drop(columns="_scaffold")
@@ -176,7 +179,8 @@ class Splitter:
         from sklearn.model_selection import train_test_split
 
         group_col = entity_df.columns[0]
-        held_out_df, remaining_df = train_test_split(
+        # train_test_split: first output = 1-split_frac (remaining), second = split_frac (held-out)
+        remaining_df, held_out_df = train_test_split(
             entity_df,
             test_size=split_frac,
             stratify=entity_df["stratum"] if entity_df["stratum"].nunique() > 1 else None,

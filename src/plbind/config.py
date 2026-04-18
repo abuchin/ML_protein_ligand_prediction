@@ -51,7 +51,7 @@ class Config:
     # ── Protein encoder ──────────────────────────────────────────────────────
     # ESM-2 (Meta, 2022) outperforms ProtBERT on FLIP benchmarks by 4-8%.
     # Swap to "facebook/esm2_t12_35M_UR50D" for CPU-only environments.
-    protein_encoder: str = "facebook/esm2_t33_650M_UR50D"
+    protein_encoder: str = "facebook/esm2_t12_35M_UR50D"
     # "mean_max" → concat(mean, max) over residues → 2×embed_dim features.
     # "mean"     → mean only.
     protein_pooling: str = "mean_max"
@@ -84,8 +84,8 @@ class Config:
     dropout: float = 0.3
     lr: float = 1e-3
     batch_size: int = 64
-    epochs: int = 100
-    patience: int = 10          # early stopping patience (epochs)
+    epochs: int = 30
+    patience: int = 5           # early stopping patience (epochs)
 
     # ── Evaluation ───────────────────────────────────────────────────────────
     shap_background_samples: int = 200

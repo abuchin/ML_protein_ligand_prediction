@@ -252,7 +252,7 @@ class InteractionMLPModel(BaseModel):
 
         self._net = self._initialize_model()
         optimizer = torch.optim.Adam(self._net.parameters(), lr=self.lr, weight_decay=1e-5)
-        scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.5, verbose=False)
+        scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.5)
         criterion = FocalLoss(gamma=2.0, alpha=0.25)
         scaler = torch.cuda.amp.GradScaler() if self._device.type == "cuda" else None
 

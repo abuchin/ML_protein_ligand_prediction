@@ -38,6 +38,7 @@ def parse_args() -> argparse.Namespace:
         help="Train/test split strategy (default: cold_protein)",
     )
     parser.add_argument("--tune", action="store_true", help="Run hyperparameter tuning")
+    parser.add_argument("--no_mlp", action="store_true", help="Skip InteractionMLP (faster smoke tests)")
     parser.add_argument("--n_samples", type=int, default=None)
     parser.add_argument("--log_level", default="INFO")
     return parser.parse_args()
@@ -102,9 +103,9 @@ def main() -> None:
         df=combined,
         block_map=block_map,
         feature_names=feature_names,
-        protein_block=protein_block,
-        ligand_block=ligand_block,
-        aux_block=aux_block,
+        protein_block=None if args.no_mlp else protein_block,
+        ligand_block=None if args.no_mlp else ligand_block,
+        aux_block=None if args.no_mlp else aux_block,
         split_strategy=args.split,
         random_seed=CFG.random_seed,
         n_samples=args.n_samples,
