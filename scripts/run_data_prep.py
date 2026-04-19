@@ -30,6 +30,63 @@ def parse_args() -> argparse.Namespace:
     return parser.parse_args()
 
 
+def _fetch_missing_smiles(combined: "pd.DataFrame", smiles_map: dict, cache_path: "Path") -> dict:
+    """Fetch SMILES from PubChem for any CIDs not already in smiles_map.
+
+    Uses the PubChem REST bulk property endpoint (200 CIDs per request).
+    Sleeps 0.3s between requests to respect the rate limit (~5 req/s).
+    Updates smiles_map in place and saves the updated cache to disk.
+    """
+    import time
+    import urllib.request
+    import json as _json
+    import pickle
+
+    logger = logging.getLogger(__name__)
+
+    all_cids = set(combined["pubchem_cid"].dropna().astype(int))
+    missing = sorted(all_cids - set(smiles_map.keys()))
+    if not missing:
+        logger.info("SMILES cache is complete — no new CIDs to fetch.")
+        return smiles_map
+
+    logger.info("Fetching SMILES for %d new CIDs from PubChem...", len(missing))
+    batch_size = 200
+    fetched = 0
+    failed = 0
+
+    for i in range(0, len(missing), batch_size):
+        batch = missing[i : i + batch_size]
+        cid_str = ",".join(str(c) for c in batch)
+        url = (
+            "https://pubchem.ncbi.nlm.nih.gov/rest/pug/compound/cid/"
+            f"{cid_str}/property/ConnectivitySMILES/JSON"
+        )
+        try:
+            with urllib.request.urlopen(url, timeout=30) as resp:
+                data = _json.loads(resp.read())
+            for prop in data.get("PropertyTable", {}).get("Properties", []):
+                cid = int(prop["CID"])
+                smi = prop.get("ConnectivitySMILES") or prop.get("CanonicalSMILES") or prop.get("IsomericSMILES")
+                if smi:
+                    smiles_map[cid] = smi
+                    fetched += 1
+        except Exception as exc:
+            logger.debug("PubChem batch %d failed: %s", i // batch_size, exc)
+            failed += len(batch)
+        time.sleep(0.3)
+
+        if (i // batch_size) % 20 == 0 and i > 0:
+            logger.info("  ... %d / %d CIDs fetched so far", i + len(batch), len(missing))
+
+    logger.info("SMILES fetch complete: %d fetched, %d failed.", fetched, failed)
+    cache_path.parent.mkdir(parents=True, exist_ok=True)
+    with cache_path.open("wb") as f:
+        pickle.dump(smiles_map, f, protocol=pickle.HIGHEST_PROTOCOL)
+    logger.info("Updated SMILES cache saved → %s (%d total entries)", cache_path, len(smiles_map))
+    return smiles_map
+
+
 def main() -> None:
     args = parse_args()
     setup_logging(CFG.outputs_dir / "logs", level=args.log_level)
@@ -69,6 +126,9 @@ def main() -> None:
     CFG.processed_dir.mkdir(parents=True, exist_ok=True)
     combined.to_csv(CFG.processed_dir / "combined_data.csv", index=False)
     logger.info("Saved combined_data.csv (%d rows)", len(combined))
+
+    # ── 1b. Fetch SMILES for any CIDs not already cached ─────────────────────
+    smiles_map = _fetch_missing_smiles(combined, smiles_map or {}, cid_smiles_path)
 
     # ── 2. Fetch UniProt sequences and auxiliary metadata ─────────────────────
     from plbind.data.protein_fetcher import UniProtFetcher

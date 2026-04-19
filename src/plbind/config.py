@@ -84,8 +84,8 @@ class Config:
     dropout: float = 0.3
     lr: float = 1e-3
     batch_size: int = 64
-    epochs: int = 30
-    patience: int = 5           # early stopping patience (epochs)
+    epochs: int = 50
+    patience: int = 10          # early stopping patience (epochs)
 
     # ── Evaluation ───────────────────────────────────────────────────────────
     shap_background_samples: int = 200
