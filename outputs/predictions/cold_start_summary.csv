@@ -23,3 +23,9 @@ lightgbm,cold_protein,f1_binary,0.9630931458699473
 lightgbm,cold_protein,ef_at_1pct,2.101754385964912
 lightgbm,cold_protein,ef_at_5pct,2.101754385964912
 lightgbm,cold_protein,bedroc,0.997127853077202
+interaction_mlp,cold_protein,roc_auc,1.0
+interaction_mlp,cold_protein,pr_auc,1.0
+interaction_mlp,cold_protein,f1_binary,1.0
+interaction_mlp,cold_protein,ef_at_1pct,2.101754385964912
+interaction_mlp,cold_protein,ef_at_5pct,2.101754385964912
+interaction_mlp,cold_protein,bedroc,1.0

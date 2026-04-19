@@ -156,17 +156,27 @@ class ColdStartEvaluator:
     def _get_proba(model, X: np.ndarray) -> np.ndarray:
         """Extract positive-class probability from any model type.
 
-        Handles both raw sklearn estimators and our BaseModel wrappers
-        (which apply scaling internally and expose predict_proba() with no args).
+        Handles three cases:
+          1. InteractionMLPModel — uses block-specific scalers; predict_proba() reads
+             its stored test tensors and takes no arguments.
+          2. sklearn BaseModel wrappers (LR, RF, XGB, LGB) — apply base class scaler,
+             then call the inner sklearn estimator's predict_proba.
+          3. Raw sklearn estimators — call predict_proba directly.
         """
-        # Our BaseModel wrappers: scale X, then delegate to the underlying estimator
-        if hasattr(model, "scaler") and hasattr(model, "model"):
+        # InteractionMLP stores block scalers separately; its predict_proba() is arg-free
+        if hasattr(model, "_prot_scaler"):
+            proba = model.predict_proba()          # returns (N, 2)
+            return proba[:, 1] if proba.ndim == 2 else proba
+
+        # sklearn BaseModel wrappers: scaler is on model.scaler, estimator on model.model
+        if hasattr(model, "scaler") and model.scaler is not None and hasattr(model, "model"):
             X_scaled = model.scaler.transform(X).astype(np.float32)
             inner = model.model
             if hasattr(inner, "predict_proba"):
                 proba = inner.predict_proba(X_scaled)
                 return proba[:, 1] if proba.ndim == 2 else proba
             return inner.predict(X_scaled).astype(float)
+
         # Plain sklearn estimator
         if hasattr(model, "predict_proba"):
             proba = model.predict_proba(X)

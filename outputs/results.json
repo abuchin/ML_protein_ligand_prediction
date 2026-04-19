@@ -89,6 +89,25 @@
       "std": 0.028977910047228255
     }
   },
+  "interaction_mlp": {
+    "accuracy": 1.0,
+    "f1_binary": 1.0,
+    "f1_macro": 1.0,
+    "precision_binary": 1.0,
+    "recall_binary": 1.0,
+    "confusion_matrix": [
+      [
+        314,
+        0
+      ],
+      [
+        0,
+        285
+      ]
+    ],
+    "roc_auc": 1.0,
+    "pr_auc": 1.0
+  },
   "cold_start": {
     "model": {
       "0": "logistic_regression",
@@ -114,7 +133,13 @@
       "20": "lightgbm",
       "21": "lightgbm",
       "22": "lightgbm",
-      "23": "lightgbm"
+      "23": "lightgbm",
+      "24": "interaction_mlp",
+      "25": "interaction_mlp",
+      "26": "interaction_mlp",
+      "27": "interaction_mlp",
+      "28": "interaction_mlp",
+      "29": "interaction_mlp"
     },
     "split_type": {
       "0": "cold_protein",
@@ -140,7 +165,13 @@
       "20": "cold_protein",
       "21": "cold_protein",
       "22": "cold_protein",
-      "23": "cold_protein"
+      "23": "cold_protein",
+      "24": "cold_protein",
+      "25": "cold_protein",
+      "26": "cold_protein",
+      "27": "cold_protein",
+      "28": "cold_protein",
+      "29": "cold_protein"
     },
     "metric": {
       "0": "roc_auc",
@@ -166,7 +197,13 @@
       "20": "f1_binary",
       "21": "ef_at_1pct",
       "22": "ef_at_5pct",
-      "23": "bedroc"
+      "23": "bedroc",
+      "24": "roc_auc",
+      "25": "pr_auc",
+      "26": "f1_binary",
+      "27": "ef_at_1pct",
+      "28": "ef_at_5pct",
+      "29": "bedroc"
     },
     "value": {
       "0": 1.0,
@@ -192,7 +229,13 @@
       "20": 0.9630931458699473,
       "21": 2.101754385964912,
       "22": 2.101754385964912,
-      "23": 0.997127853077202
+      "23": 0.997127853077202,
+      "24": 1.0,
+      "25": 1.0,
+      "26": 1.0,
+      "27": 2.101754385964912,
+      "28": 2.101754385964912,
+      "29": 1.0
     }
   }
 }
