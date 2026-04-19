@@ -1,0 +1,36 @@
+# Python
+__pycache__/
+*.py[cod]
+*.pyo
+*.pyd
+.Python
+*.egg-info/
+dist/
+build/
+.eggs/
+
+# Virtual environments
+.venv/
+venv/
+env/
+
+# ESM-2 and model cache (large, reproducible)
+Data/cache/
+data/cache/
+
+# Jupyter
+.ipynb_checkpoints/
+*.ipynb
+
+# macOS
+.DS_Store
+
+# IDE
+.vscode/
+.idea/
+
+# Logs (keep structured logs in outputs/logs/, exclude raw run.log churn)
+*.log
+
+# Large binary outputs that are regenerated each run
+# (keep model .pkl/.pt and processed data — they're tracked)
