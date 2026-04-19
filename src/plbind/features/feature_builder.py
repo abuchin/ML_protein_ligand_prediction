@@ -120,7 +120,8 @@ class FeatureBuilder:
 
         X = np.concatenate(parts, axis=1).astype(np.float32)
         y = df.loc[mask, "bound"].values.astype(np.int32)
-        return X, y, self.block_map
+        df_filtered = df.loc[mask].reset_index(drop=True)
+        return X, y, self.block_map, df_filtered
 
     def build_blocks(
         self,

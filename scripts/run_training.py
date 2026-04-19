@@ -89,8 +89,8 @@ def main() -> None:
         aux_features=aux_features,
     )
 
-    X, y, block_map = builder.build(combined, log_attrition=True)
-    protein_block, ligand_block, aux_block, _ = builder.build_blocks(combined)
+    X, y, block_map, df_filtered = builder.build(combined, log_attrition=True)
+    protein_block, ligand_block, aux_block, _ = builder.build_blocks(df_filtered)
     feature_names = builder.feature_names
 
     logger.info("Feature matrix: %s  (protein=%d, ligand=%d, aux=%d)",
@@ -100,7 +100,7 @@ def main() -> None:
     pipeline = TrainingPipeline(
         X=X,
         y=y,
-        df=combined,
+        df=df_filtered,
         block_map=block_map,
         feature_names=feature_names,
         protein_block=None if args.no_mlp else protein_block,
