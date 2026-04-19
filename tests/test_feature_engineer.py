@@ -60,37 +60,37 @@ class TestFeatureBuilderInit:
 
 class TestBuild:
     def test_output_types(self):
-        X, y, block_map = _make_builder().build(_make_df())
+        X, y, block_map, _ = _make_builder().build(_make_df())
         assert isinstance(X, np.ndarray)
         assert isinstance(y, np.ndarray)
         assert isinstance(block_map, dict)
 
     def test_feature_width(self):
-        X, y, _ = _make_builder().build(_make_df())
+        X, y, _, _ = _make_builder().build(_make_df())
         assert X.shape[1] == PROT_DIM + FP_DIM + DESC_DIM
 
     def test_row_count_matches(self):
-        X, y, _ = _make_builder().build(_make_df())
+        X, y, _, _ = _make_builder().build(_make_df())
         assert len(X) == len(y) == N_ROWS
 
     def test_missing_protein_skipped(self):
         df = _make_df()
         df.loc[0, "UniProt_ID"] = "MISSING"
-        X, y, _ = _make_builder().build(df, log_attrition=False)
+        X, y, _, _ = _make_builder().build(df, log_attrition=False)
         assert len(X) == N_ROWS - 1
 
     def test_missing_ligand_skipped(self):
         df = _make_df()
         df.loc[0, "pubchem_cid"] = 9999
-        X, y, _ = _make_builder().build(df, log_attrition=False)
+        X, y, _, _ = _make_builder().build(df, log_attrition=False)
         assert len(X) == N_ROWS - 1
 
     def test_binary_labels_are_0_or_1(self):
-        _, y, _ = _make_builder().build(_make_df())
+        _, y, _, _ = _make_builder().build(_make_df())
         assert set(np.unique(y)).issubset({0, 1})
 
     def test_feature_width_with_aux(self):
-        X, _, _ = _make_builder(with_aux=True).build(_make_df())
+        X, _, _, _ = _make_builder(with_aux=True).build(_make_df())
         assert X.shape[1] == PROT_DIM + FP_DIM + DESC_DIM + 2
 
 
