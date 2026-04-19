@@ -93,7 +93,7 @@ class Splitter:
             stratify=train_val["bound"],
             random_state=self.random_state,
         )
-        return train.reset_index(drop=True), val.reset_index(drop=True), test.reset_index(drop=True)
+        return train, val, test
 
     def cold_protein_split(self, df: pd.DataFrame, **_) -> _SPLIT:
         """No UniProt_ID appears in more than one partition.
@@ -109,7 +109,7 @@ class Splitter:
         test = df[df["UniProt_ID"].isin(test_proteins)]
         val = df[df["UniProt_ID"].isin(val_proteins)]
         train = df[df["UniProt_ID"].isin(train_proteins)]
-        return train.reset_index(drop=True), val.reset_index(drop=True), test.reset_index(drop=True)
+        return train, val, test
 
     def cold_ligand_split(self, df: pd.DataFrame, **_) -> _SPLIT:
         """No pubchem_cid appears in more than one partition."""
@@ -121,7 +121,7 @@ class Splitter:
         test = df[df["pubchem_cid"].isin(test_ligs)]
         val = df[df["pubchem_cid"].isin(val_ligs)]
         train = df[df["pubchem_cid"].isin(train_ligs)]
-        return train.reset_index(drop=True), val.reset_index(drop=True), test.reset_index(drop=True)
+        return train, val, test
 
     def scaffold_split(self, df: pd.DataFrame, smiles_map: Optional[Dict[int, str]] = None, **_) -> _SPLIT:
         """Bemis-Murcko scaffold split — standard MoleculeNet benchmark.
@@ -145,7 +145,7 @@ class Splitter:
         test = df[df["_scaffold"].isin(test_sc)].drop(columns="_scaffold")
         val = df[df["_scaffold"].isin(val_sc)].drop(columns="_scaffold")
         train = df[df["_scaffold"].isin(train_sc)].drop(columns="_scaffold")
-        return train.reset_index(drop=True), val.reset_index(drop=True), test.reset_index(drop=True)
+        return train, val, test
 
     def cold_both_split(self, df: pd.DataFrame, **kwargs) -> _SPLIT:
         """Both proteins and ligands unseen in test — hardest and most realistic.
@@ -157,7 +157,7 @@ class Splitter:
         train_cids = set(train["pubchem_cid"]) | set(val["pubchem_cid"])
         test = test[~test["pubchem_cid"].isin(train_cids)]
         logger.info("cold_both: test reduced to %d rows after removing shared CIDs.", len(test))
-        return train, val, test.reset_index(drop=True)
+        return train, val, test
 
     # ── Helpers ───────────────────────────────────────────────────────────────
 
