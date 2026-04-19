@@ -24,6 +24,7 @@ from plbind.utils.seed import set_all_seeds
 def parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description="Protein-ligand data preparation")
     parser.add_argument("--n_samples", type=int, default=None, help="Subsample rows for quick dev runs")
+    parser.add_argument("--n_proteins", type=int, default=None, help="Randomly sample N proteins (keeps all their rows)")
     parser.add_argument("--keep_measured", action="store_true", help="Keep only kiba_score_estimated==False")
     parser.add_argument("--no_decoys", action="store_true", help="Use random negatives instead of property-matched")
     parser.add_argument("--log_level", default="INFO")
@@ -118,6 +119,12 @@ def main() -> None:
         logger.info("Loaded SMILES map: %d entries", len(smiles_map))
 
     combined = prep.preprocess(str(CFG.raw_data_path), smiles_map=smiles_map)
+    if args.n_proteins:
+        rng = __import__("numpy").random.default_rng(CFG.random_seed)
+        proteins = combined["UniProt_ID"].unique()
+        sampled = rng.choice(proteins, size=min(args.n_proteins, len(proteins)), replace=False)
+        combined = combined[combined["UniProt_ID"].isin(sampled)].reset_index(drop=True)
+        logger.info("Filtered to %d proteins → %d rows.", len(sampled), len(combined))
     if args.n_samples:
         combined = combined.sample(n=min(args.n_samples, len(combined)),
                                    random_state=CFG.random_seed).reset_index(drop=True)

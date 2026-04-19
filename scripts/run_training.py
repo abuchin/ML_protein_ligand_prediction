@@ -40,6 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tune", action="store_true", help="Run hyperparameter tuning")
     parser.add_argument("--no_mlp", action="store_true", help="Skip InteractionMLP (faster smoke tests)")
     parser.add_argument("--n_samples", type=int, default=None)
+    parser.add_argument("--output_dir", default=None, help="Override CFG.outputs_dir for this run")
     parser.add_argument("--log_level", default="INFO")
     return parser.parse_args()
 
@@ -67,7 +68,9 @@ def load_processed_data(processed_dir: Path) -> tuple:
 
 def main() -> None:
     args = parse_args()
-    setup_logging(CFG.outputs_dir / "logs", level=args.log_level)
+    output_dir = Path(args.output_dir) if args.output_dir else CFG.outputs_dir
+    output_dir.mkdir(parents=True, exist_ok=True)
+    setup_logging(output_dir / "logs", level=args.log_level)
     set_all_seeds(CFG.random_seed)
     logger = logging.getLogger(__name__)
 
@@ -110,7 +113,7 @@ def main() -> None:
         random_seed=CFG.random_seed,
         n_samples=args.n_samples,
         tune=args.tune,
-        output_dir=CFG.outputs_dir,
+        output_dir=output_dir,
     )
 
     results = pipeline.run()
