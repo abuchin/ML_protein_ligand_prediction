@@ -1,0 +1,6 @@
+model,test_roc_auc,test_pr_auc,test_f1_binary,test_accuracy,cold_roc_auc,cold_pr_auc,cold_bedroc,cold_ef_at_1pct,cold_ef_at_5pct,cv_roc_auc_mean,cv_roc_auc_std
+logistic_regression,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,2.1018,2.1018,0.5343,0.0228
+random_forest,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,2.1018,2.1018,,
+xgboost,0.9958,0.9950,0.9580,0.9599,0.9958,0.9950,0.9950,2.1018,2.1018,,
+lightgbm,0.9973,0.9971,0.9631,0.9649,0.9973,0.9971,0.9971,2.1018,2.1018,,
+interaction_mlp,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,1.0000,2.1018,2.1018,,
