@@ -260,7 +260,7 @@ class InteractionMLPModel(BaseModel):
         scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.5)
         criterion = FocalLoss(gamma=2.0, alpha=0.25)
         use_amp = self._device.type == "cuda"
-        scaler = torch.cuda.amp.GradScaler() if use_amp else None
+        scaler = torch.amp.GradScaler("cuda") if use_amp else None
 
         best_val_loss = float("inf")
         patience_counter = 0
@@ -275,10 +275,12 @@ class InteractionMLPModel(BaseModel):
                 aux_input = aux if aux.shape[-1] > 0 else None
                 optimizer.zero_grad()
                 if scaler:
-                    with torch.cuda.amp.autocast():
+                    with torch.amp.autocast("cuda"):
                         logits = self._net(prot, lig, aux_input)
                         loss = criterion(logits, labels)
                     scaler.scale(loss).backward()
+                    scaler.unscale_(optimizer)
+                    torch.nn.utils.clip_grad_norm_(self._net.parameters(), max_norm=1.0)
                     scaler.step(optimizer)
                     scaler.update()
                 else:

@@ -12,7 +12,7 @@ class Config:
 
     @property
     def data_dir(self) -> Path:
-        return self.base_dir / "data"
+        return self.base_dir / "Data"
 
     @property
     def raw_data_path(self) -> Path:
@@ -25,10 +25,6 @@ class Config:
     @property
     def cache_dir(self) -> Path:
         return self.data_dir / "cache"
-
-    @property
-    def models_dir(self) -> Path:
-        return self.base_dir / "models"
 
     @property
     def outputs_dir(self) -> Path:

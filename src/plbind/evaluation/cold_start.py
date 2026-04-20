@@ -141,13 +141,15 @@ class ColdStartEvaluator:
         try:
             from rdkit.ML.Scoring.Scoring import CalcBEDROC
             order = np.argsort(scores)[::-1]
-            actives = y_true[order].tolist()
-            n_actives = sum(actives)
+            # CalcBEDROC expects a list of indexable rows [[label], ...] sorted
+            # descending by score; col=0 points at the label column.
+            scored = [[int(v)] for v in y_true[order]]
+            n_actives = sum(row[0] for row in scored)
             if n_actives == 0:
                 return 0.0
-            return float(CalcBEDROC(actives, col=0, alpha=alpha))
-        except Exception:
-            logger.debug("RDKit Bedroc unavailable; substituting PR-AUC.")
+            return float(CalcBEDROC(scored, col=0, alpha=alpha))
+        except ImportError:
+            logger.debug("RDKit BEDROC unavailable; substituting PR-AUC.")
             return float(average_precision_score(y_true, scores))
 
     # ── Helpers ───────────────────────────────────────────────────────────────

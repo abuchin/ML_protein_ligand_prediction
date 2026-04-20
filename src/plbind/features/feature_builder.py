@@ -82,10 +82,20 @@ class FeatureBuilder:
     @property
     def feature_names(self) -> List[str]:
         protein_names = [f"esm2_{i}" for i in range(self.protein_dim)]
-        ligand_enc = LigandEncoder()
-        ligand_names = ligand_enc.feature_names
+        # Build ligand names from actual stored dims to avoid mismatch with non-default configs
+        from plbind.data.ligand_encoder import MORGAN_BITS, MACCS_BITS, ATOMPAIR_BITS
+        if self.ligand_fp_dim == MORGAN_BITS + MACCS_BITS + ATOMPAIR_BITS:
+            morgan_names = [f"morgan_{i}" for i in range(MORGAN_BITS)]
+            maccs_names = [f"maccs_{i}" for i in range(1, MACCS_BITS + 1)]
+            ap_names = [f"atompair_{i}" for i in range(ATOMPAIR_BITS)]
+            fp_names = morgan_names + maccs_names + ap_names
+        else:
+            fp_names = [f"fp_{i}" for i in range(self.ligand_fp_dim)]
+        desc_names = DESCRIPTOR_NAMES if self.ligand_desc_dim == len(DESCRIPTOR_NAMES) else [
+            f"desc_{i}" for i in range(self.ligand_desc_dim)
+        ]
         aux_names = list(self.aux_features.columns) if self.aux_features is not None else []
-        return protein_names + ligand_names + aux_names
+        return protein_names + fp_names + desc_names + aux_names
 
     # ── Public API ────────────────────────────────────────────────────────────
 
@@ -93,7 +103,7 @@ class FeatureBuilder:
         self,
         df: pd.DataFrame,
         log_attrition: bool = True,
-    ) -> Tuple[np.ndarray, np.ndarray, Dict[str, slice]]:
+    ) -> Tuple[np.ndarray, np.ndarray, Dict[str, slice], pd.DataFrame]:
         """Build flat feature matrix and binary label vector.
 
         Args:
@@ -101,9 +111,10 @@ class FeatureBuilder:
             log_attrition:  Whether to log how many rows are dropped for missing features.
 
         Returns:
-            X:          np.ndarray float32 (N, total_dim)
-            y:          np.ndarray int32 (N,)
-            block_map:  Dict mapping block name → column slice
+            X:           np.ndarray float32 (N, total_dim)
+            y:           np.ndarray int32 (N,)
+            block_map:   Dict mapping block name → column slice
+            df_filtered: DataFrame aligned with X/y (rows with missing features dropped)
         """
         protein_block, ligand_fp_block, desc_block, aux_block, mask = self._extract_blocks(df)
 

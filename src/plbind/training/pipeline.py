@@ -99,9 +99,9 @@ class TrainingPipeline:
 
         X_train, X_val, X_test = X[train_idx], X[val_idx], X[test_idx]
         y_train, y_val, y_test = y[train_idx], y[val_idx], y[test_idx]
-        groups_train = df.loc[train_idx, "UniProt_ID"].values
 
         # ── Train sklearn models ──
+        from sklearn.preprocessing import StandardScaler
         sklearn_models = {
             "logistic_regression": ModelFactory.create("logistic_regression", random_state=self.random_seed),
             "random_forest": ModelFactory.create("random_forest", random_state=self.random_seed),
@@ -112,12 +112,14 @@ class TrainingPipeline:
         results = {}
         for name, model in sklearn_models.items():
             logger.info("--- %s ---", name)
-            model.split_data(X, y)  # uses internal split; override with pre-split below
-            # Provide pre-split data directly
+            # Fit scaler on train split only — never touch the full X
+            model.scaler = StandardScaler()
             model.X_train = model.scaler.fit_transform(X_train).astype(np.float32)
             model.X_test = model.scaler.transform(X_test).astype(np.float32)
             model.y_train = y_train
             model.y_test = y_test
+            logger.info("%s split: %d train / %d test  (pos_rate_train=%.3f)",
+                        name, len(y_train), len(y_test), y_train.mean())
 
             if self.tune:
                 model.tune()
@@ -160,7 +162,8 @@ class TrainingPipeline:
             try:
                 logger.info("CV: %s ...", cv_name)
                 cv_result = ModelEvaluator.cross_validate(
-                    estimator, X, y, groups=groups_all, cv=5
+                    estimator, X, y, groups=groups_all, cv=5,
+                    random_state=self.random_seed,
                 )
                 results[f"cv_{cv_name}"] = cv_result
                 logger.info(
@@ -220,8 +223,8 @@ class TrainingPipeline:
         cold_evaluator = ColdStartEvaluator(ef_cutoffs=CFG.ef_cutoffs)
         cold_results = cold_evaluator.evaluate_all_splits(
             models={n: m for n, m in sklearn_models.items()},
-            split_data={"cold_protein": (X_test, y_test)},
-            df_splits={"cold_protein": test_df},
+            split_data={self.split_strategy: (X_test, y_test)},
+            df_splits={self.split_strategy: test_df},
             output_dir=self.output_dir / "predictions",
         )
         results["cold_start"] = cold_results.to_dict()
@@ -244,6 +247,13 @@ class TrainingPipeline:
         self, X: np.ndarray, y: np.ndarray, df: pd.DataFrame
     ) -> Tuple[np.ndarray, np.ndarray, pd.DataFrame]:
         if self.n_samples is not None and self.n_samples < len(y):
-            idx = np.random.choice(len(y), self.n_samples, replace=False)
+            rng = np.random.RandomState(self.random_seed)
+            idx = rng.choice(len(y), self.n_samples, replace=False)
+            if self.protein_block is not None:
+                self.protein_block = self.protein_block[idx]
+            if self.ligand_block is not None:
+                self.ligand_block = self.ligand_block[idx]
+            if self.aux_block is not None:
+                self.aux_block = self.aux_block[idx]
             return X[idx], y[idx], df.iloc[idx].reset_index(drop=True)
         return X, y, df.reset_index(drop=True)

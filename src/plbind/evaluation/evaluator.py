@@ -78,6 +78,7 @@ class ModelEvaluator:
         groups: Optional[np.ndarray] = None,
         cv: int = 5,
         scoring: Optional[List[str]] = None,
+        random_state: int = 42,
     ) -> Dict[str, Dict[str, float]]:
         """Run CV with optional protein-aware grouping.
 
@@ -97,10 +98,10 @@ class ModelEvaluator:
             scoring = ["f1_macro", "roc_auc", "average_precision"]
 
         if groups is not None:
-            splitter = StratifiedGroupKFold(n_splits=cv, shuffle=True, random_state=42)
+            splitter = StratifiedGroupKFold(n_splits=cv, shuffle=True, random_state=random_state)
             logger.info("CV: StratifiedGroupKFold (n_splits=%d) — protein-aware, no leakage.", cv)
         else:
-            splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=42)
+            splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
             logger.info("CV: StratifiedKFold (n_splits=%d).", cv)
 
         from sklearn.pipeline import Pipeline
