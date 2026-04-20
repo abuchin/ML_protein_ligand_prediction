@@ -137,16 +137,31 @@ class TrainingPipeline:
             )
             model.save_model(self.output_dir / "models" / f"{name}.pkl")
 
-        # ── CV with protein-aware groups ──
+        # ── CV with protein-aware groups (all sklearn models) ──
         groups_all = df["UniProt_ID"].values
-        try:
-            from sklearn.linear_model import LogisticRegression
-            from sklearn.preprocessing import StandardScaler
-            lr = LogisticRegression(max_iter=500, class_weight="balanced", random_state=self.random_seed)
-            cv_results = ModelEvaluator.cross_validate(lr, X, y, groups=groups_all, cv=5)
-            results["cv_logistic_regression"] = cv_results
-        except Exception as exc:
-            logger.warning("CV failed: %s", exc)
+        cv_estimators = {
+            "logistic_regression": sklearn_models["logistic_regression"].model,
+            "random_forest":       sklearn_models["random_forest"].model,
+            "xgboost":             sklearn_models["xgboost"].model,
+            "lightgbm":            sklearn_models["lightgbm"].model,
+        }
+        for cv_name, estimator in cv_estimators.items():
+            try:
+                logger.info("CV: %s ...", cv_name)
+                cv_result = ModelEvaluator.cross_validate(
+                    estimator, X, y, groups=groups_all, cv=5
+                )
+                results[f"cv_{cv_name}"] = cv_result
+                logger.info(
+                    "CV %s → ROC-AUC=%.4f ± %.4f  PR-AUC=%.4f ± %.4f",
+                    cv_name,
+                    cv_result.get("roc_auc", {}).get("mean", float("nan")),
+                    cv_result.get("roc_auc", {}).get("std", float("nan")),
+                    cv_result.get("average_precision", {}).get("mean", float("nan")),
+                    cv_result.get("average_precision", {}).get("std", float("nan")),
+                )
+            except Exception as exc:
+                logger.warning("CV failed for %s: %s", cv_name, exc)
 
         # ── InteractionMLP ──
         if self.protein_block is not None and self.ligand_block is not None:
