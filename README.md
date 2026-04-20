@@ -1,7 +1,5 @@
 # Protein-Ligand Binding Prediction
 
-![Random Forest feature importance](images/RF_image.png)
-
 A production-ready machine learning pipeline for predicting protein-ligand binding affinity from UniProt IDs and PubChem CIDs. The pipeline covers data preparation, feature engineering, model training, evaluation, and interpretability — all from a single command.
 
 ---
