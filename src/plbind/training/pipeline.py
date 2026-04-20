@@ -138,11 +138,22 @@ class TrainingPipeline:
             model.save_model(self.output_dir / "models" / f"{name}.pkl")
 
         # ── CV with protein-aware groups (all sklearn models) ──
+        # XGBoost is re-instantiated without early_stopping_rounds because
+        # cross_validate does not pass eval_set and early stopping requires it.
+        from xgboost import XGBClassifier
+        xgb_cv = XGBClassifier(
+            n_estimators=sklearn_models["xgboost"].n_estimators,
+            max_depth=sklearn_models["xgboost"].max_depth,
+            learning_rate=sklearn_models["xgboost"].learning_rate,
+            scale_pos_weight=sklearn_models["xgboost"].scale_pos_weight,
+            eval_metric="logloss",
+            random_state=self.random_seed,
+        )
         groups_all = df["UniProt_ID"].values
         cv_estimators = {
             "logistic_regression": sklearn_models["logistic_regression"].model,
             "random_forest":       sklearn_models["random_forest"].model,
-            "xgboost":             sklearn_models["xgboost"].model,
+            "xgboost":             xgb_cv,
             "lightgbm":            sklearn_models["lightgbm"].model,
         }
         for cv_name, estimator in cv_estimators.items():
