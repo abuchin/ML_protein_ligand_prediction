@@ -150,13 +150,25 @@ class Splitter:
     def cold_both_split(self, df: pd.DataFrame, **kwargs) -> _SPLIT:
         """Both proteins and ligands unseen in test — hardest and most realistic.
 
-        Approximation: cold_protein_split first, then remove any CIDs from test
-        that also appear in train. This reduces test size but maintains the guarantee.
+        Filters test rows where the ligand appeared as a BINDER (bound==1) in any
+        training protein. This prevents the model from leveraging prior knowledge of
+        a drug's binding profile. Artificial decoys are not filtered — they were
+        generated from the shared pool and filtering them would leave a degenerate
+        all-positive test set.
         """
         train, val, test = self.cold_protein_split(df, **kwargs)
-        train_cids = set(train["pubchem_cid"]) | set(val["pubchem_cid"])
-        test = test[~test["pubchem_cid"].isin(train_cids)]
-        logger.info("cold_both: test reduced to %d rows after removing shared CIDs.", len(test))
+        # Only filter ligands the model has seen BINDING to a training protein
+        train_pos_cids = (
+            set(train.loc[train["bound"] == 1, "pubchem_cid"])
+            | set(val.loc[val["bound"] == 1, "pubchem_cid"])
+        )
+        test = test[~test["pubchem_cid"].isin(train_pos_cids)]
+        pos_rate = test["bound"].mean() if len(test) > 0 else float("nan")
+        logger.info(
+            "cold_both: test set %d rows, pos_rate=%.3f "
+            "(filtered %d ligands known to bind training proteins).",
+            len(test), pos_rate, len(train_pos_cids),
+        )
         return train, val, test
 
     # ── Helpers ───────────────────────────────────────────────────────────────

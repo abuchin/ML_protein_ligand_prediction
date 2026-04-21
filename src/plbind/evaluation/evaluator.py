@@ -115,7 +115,7 @@ class ModelEvaluator:
             groups=groups,
             cv=splitter,
             scoring=scoring,
-            n_jobs=-1,
+            n_jobs=1,
             return_train_score=False,
         )
 

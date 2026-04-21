@@ -39,6 +39,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument("--tune", action="store_true", help="Run hyperparameter tuning")
     parser.add_argument("--no_mlp", action="store_true", help="Skip InteractionMLP (faster smoke tests)")
+    parser.add_argument("--device", default=None, help="Override device for MLP: auto|cpu|cuda|mps")
     parser.add_argument("--n_samples", type=int, default=None)
     parser.add_argument("--output_dir", default=None, help="Override CFG.outputs_dir for this run")
     parser.add_argument("--log_level", default="INFO")
@@ -83,6 +84,14 @@ def main() -> None:
     logger.info("Loaded %d rows, %d proteins, %d ligands.", len(combined),
                 len(protein_embeddings), fp_matrix.shape[0])
 
+    # Early subsample: filter combined BEFORE building the feature matrix so
+    # the matrix never grows to full-dataset size in RAM.
+    if args.n_samples and args.n_samples < len(combined):
+        rng = np.random.default_rng(CFG.random_seed)
+        idx = rng.choice(len(combined), size=args.n_samples, replace=False)
+        combined = combined.iloc[idx].reset_index(drop=True)
+        logger.info("Early subsample: %d → %d rows before feature build.", args.n_samples + (len(combined) - args.n_samples), len(combined))
+
     # ── Build feature matrix ──────────────────────────────────────────────────
     builder = FeatureBuilder(
         protein_embeddings=protein_embeddings,
@@ -100,6 +109,7 @@ def main() -> None:
                 X.shape, builder.protein_dim, builder.ligand_dim, builder.aux_dim)
 
     # ── Run pipeline ──────────────────────────────────────────────────────────
+    mlp_device = args.device or CFG.device
     pipeline = TrainingPipeline(
         X=X,
         y=y,
@@ -111,9 +121,10 @@ def main() -> None:
         aux_block=None if args.no_mlp else aux_block,
         split_strategy=args.split,
         random_seed=CFG.random_seed,
-        n_samples=args.n_samples,
+        n_samples=None,  # already applied above
         tune=args.tune,
         output_dir=output_dir,
+        mlp_device=mlp_device,
     )
 
     results = pipeline.run()

@@ -64,6 +64,7 @@ class TrainingPipeline:
         n_samples: Optional[int] = None,
         tune: bool = False,
         output_dir: Optional[Path] = None,
+        mlp_device: str = "auto",
     ) -> None:
         self.X = X
         self.y = y
@@ -78,6 +79,7 @@ class TrainingPipeline:
         self.n_samples = n_samples
         self.tune = tune
         self.output_dir = Path(output_dir) if output_dir else CFG.outputs_dir
+        self.mlp_device = mlp_device
 
     # ── Main entry point ──────────────────────────────────────────────────────
 
@@ -194,6 +196,7 @@ class TrainingPipeline:
                     batch_size=CFG.batch_size,
                     epochs=CFG.epochs,
                     patience=CFG.patience,
+                    device=self.mlp_device,
                     random_state=self.random_seed,
                 )
                 mlp.set_split_data(
