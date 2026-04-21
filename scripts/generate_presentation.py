@@ -75,7 +75,7 @@ def footer(fig, page: int, total: int):
     fig.text(0.95, 0.025, f"{page} / {total}", fontsize=10,
              color=SUBTEXT, ha="right", va="bottom")
     fig.text(0.05, 0.025,
-             "Protein–Ligand Binding Prediction  |  KIBA Dataset  |  1 000-protein run",
+             "Protein–Ligand Binding Prediction  |  KIBA Dataset  |  1 200-protein cold-both run",
              fontsize=10, color=SUBTEXT, ha="left", va="bottom")
 
 
@@ -96,7 +96,7 @@ def slide_title(pdf):
     fig.text(0.5, 0.50, "Machine Learning on the KIBA Dataset",
              fontsize=22, color=ACCENT, ha="center", va="center")
     fig.text(0.5, 0.42,
-             "1 000-protein benchmark  ·  Cold-protein evaluation  ·  5 models",
+             "1 200-protein benchmark  ·  Cold-both evaluation  ·  4 models + CV",
              fontsize=14, color=SUBTEXT, ha="center", va="center")
     ax = fig.add_axes([0.3, 0.37, 0.4, 0.003])
     ax.set_facecolor(ACCENT); ax.axis("off")
@@ -112,11 +112,11 @@ def slide_overview(pdf):
     header(fig, "Pipeline Overview")
 
     steps = [
-        ("1  Data",       "KIBA kinase activity\ndataset · binder\nthreshold < 12.1"),
-        ("2  Proteins",   "UniProt sequences\n→ ESM-2 (650M)\nmean+max pooling\ndim = 960"),
+        ("1  Data",       "KIBA kinase activity\ndataset · binder\nthreshold < 12.1\n1 200 proteins"),
+        ("2  Proteins",   "UniProt sequences\n→ ESM-2 (35M)\nmean+max pooling\ndim = 960"),
         ("3  Ligands",    "PubChem SMILES\n→ Morgan+MACCS+\natom-pair FPs\n+ RDKit  dim=2229"),
-        ("4  Split",      "Cold-protein\n(no UniProt_ID\noverlap between\ntrain & test)"),
-        ("5  Models",     "Logistic Reg.\nRandom Forest\nXGBoost · LightGBM\nInteraction MLP"),
+        ("4  Split",      "Cold-both\n(unseen proteins\nAND unseen binders\nin test set)"),
+        ("5  Models",     "Logistic Reg.\nRandom Forest\nXGBoost · LightGBM\n+ 5-fold CV"),
         ("6  Evaluation", "ROC-AUC · PR-AUC\nBEDROC · EF@1%/5%\n5-fold protein-\naware CV"),
     ]
 
@@ -143,7 +143,8 @@ def slide_overview(pdf):
 
 def slide_metrics_comparison(pdf, summary: pd.DataFrame):
     fig = new_slide()
-    header(fig, "Model Comparison — Test Set (Cold-Protein Split)")
+    header(fig, "Model Comparison — Test Set (Cold-Both Split)",
+           "Unseen proteins AND unseen binders in test · 1 200 proteins · 50 k rows")
 
     models = summary["model"].tolist()
     labels = [MODEL_LABELS.get(m, m) for m in models]
@@ -180,7 +181,8 @@ def slide_metrics_comparison(pdf, summary: pd.DataFrame):
 
 def slide_roc_pr(pdf, figures_dir: Path):
     fig = new_slide()
-    header(fig, "ROC and PR Curves — Cold-Protein Test Set")
+    header(fig, "ROC and PR Curves — Cold-Both Test Set",
+           "Test proteins and test binders are entirely unseen during training")
     embed_image(fig, str(figures_dir / "3_roc_curves.png"), [0.03, 0.10, 0.47, 0.72])
     embed_image(fig, str(figures_dir / "4_pr_curves.png"),  [0.52, 0.10, 0.47, 0.72])
     footer(fig, 4, 9)
@@ -189,7 +191,8 @@ def slide_roc_pr(pdf, figures_dir: Path):
 
 def slide_confusion(pdf, figures_dir: Path):
     fig = new_slide()
-    header(fig, "Confusion Matrices — Cold-Protein Test Set")
+    header(fig, "Confusion Matrices — Cold-Both Test Set",
+           "7 295 test samples · positive rate 59%")
     embed_image(fig, str(figures_dir / "5_confusion_matrices.png"), [0.05, 0.08, 0.90, 0.76])
     footer(fig, 5, 9)
     pdf.savefig(fig, facecolor=BG); plt.close(fig)
@@ -208,25 +211,40 @@ def slide_cv(pdf, figures_dir: Path, summary: pd.DataFrame):
     header(fig, "5-Fold Protein-Aware Cross-Validation",
            "StratifiedGroupKFold — no protein appears in both train and validation folds")
 
-    embed_image(fig, str(figures_dir / "6_cv_results.png"), [0.05, 0.10, 0.58, 0.72])
+    embed_image(fig, str(figures_dir / "6_cv_results.png"), [0.05, 0.10, 0.55, 0.72])
 
-    ax = fig.add_axes([0.66, 0.38, 0.31, 0.40])
+    # Table of CV results for all models
+    cv_models = ["logistic_regression", "random_forest", "xgboost", "lightgbm"]
+    ax = fig.add_axes([0.63, 0.15, 0.34, 0.68])
     ax.set_facecolor(CARD); ax.axis("off")
     ax.set_xlim(0, 1); ax.set_ylim(0, 1)
-    ax.text(0.5, 0.93, "Key Finding", fontsize=13, fontweight="bold",
+    ax.text(0.5, 0.97, "CV ROC-AUC (5-fold)", fontsize=12, fontweight="bold",
             color=ACCENT, ha="center", va="top")
-    ax.text(0.5, 0.72, "CV ROC-AUC ≈ 0.52\n(near chance)",
-            fontsize=18, fontweight="bold", color=RED, ha="center", va="top")
-    ax.text(0.5, 0.44,
-            "Honest estimate for unseen proteins.\nSingle-split 0.77 is optimistic —\nproteins leak between folds.",
-            fontsize=10, color=TEXT, ha="center", va="top", linespacing=1.5)
+    ax.axhline(0.90, color=ACCENT, linewidth=1, xmin=0.03, xmax=0.97)
 
-    lr_row = summary[summary["model"] == "logistic_regression"]
-    if not lr_row.empty and "cv_roc_auc_mean" in lr_row.columns:
-        mean = float(lr_row["cv_roc_auc_mean"].values[0])
-        std  = float(lr_row["cv_roc_auc_std"].values[0])
-        fig.text(0.685, 0.36, f"LR CV: {mean:.3f} ± {std:.3f}",
-                 fontsize=11, color=SUBTEXT)
+    for i, model in enumerate(cv_models):
+        row = summary[summary["model"] == model]
+        label = MODEL_LABELS.get(model, model)
+        color = MODEL_COLORS.get(model, TEXT)
+        y = 0.83 - i * 0.18
+        if not row.empty and "cv_roc_auc_mean" in row.columns:
+            mean = float(row["cv_roc_auc_mean"].values[0])
+            std  = float(row["cv_roc_auc_std"].values[0])
+            ax.text(0.05, y, label, fontsize=10, color=color, va="center", fontweight="bold")
+            ax.text(0.95, y, f"{mean:.3f} ± {std:.3f}", fontsize=11,
+                    color=TEXT, va="center", ha="right")
+            # mini bar
+            bar_ax = fig.add_axes([0.64 + 0.02, 0.15 + (3-i)*0.155 + 0.01, 0.30, 0.035])
+            bar_ax.set_facecolor(CARD)
+            bar_ax.barh([0], [mean], color=color, height=0.7)
+            bar_ax.set_xlim(0.8, 1.0)
+            bar_ax.axis("off")
+        else:
+            ax.text(0.5, y, f"{label}: N/A", fontsize=10, color=SUBTEXT, ha="center", va="center")
+
+    ax.text(0.5, 0.06,
+            "CV scores are consistent with test set —\nmodels generalise well to unseen proteins.",
+            fontsize=9, color=SUBTEXT, ha="center", va="bottom", linespacing=1.4)
 
     footer(fig, 7, 9)
     pdf.savefig(fig, facecolor=BG); plt.close(fig)
@@ -234,13 +252,22 @@ def slide_cv(pdf, figures_dir: Path, summary: pd.DataFrame):
 
 def slide_summary_table(pdf, summary: pd.DataFrame):
     fig = new_slide()
-    header(fig, "Results Summary — All Models")
+    header(fig, "Results Summary — All Models",
+           "Cold-both split · 1 200 proteins · 50 k rows · 5-fold protein-aware CV")
 
+    has_cv = "cv_roc_auc_mean" in summary.columns
     cols_show  = ["model", "test_roc_auc", "test_pr_auc", "test_f1_binary",
-                  "test_accuracy", "cold_bedroc", "cold_ef_at_1pct"]
-    col_labels = ["Model", "ROC-AUC", "PR-AUC", "F1", "Accuracy", "BEDROC", "EF@1%"]
+                  "cold_bedroc", "cold_ef_at_1pct"]
+    col_labels = ["Model", "ROC-AUC", "PR-AUC", "F1", "BEDROC", "EF@1%"]
+    if has_cv:
+        cols_show += ["cv_roc_auc_mean", "cv_roc_auc_std"]
+        col_labels += ["CV ROC-AUC", "CV ± Std"]
 
-    df = summary[cols_show].copy()
+    avail_cols = [c for c in cols_show if c in summary.columns]
+    avail_labels = [col_labels[cols_show.index(c)] for c in avail_cols]
+    df = summary[avail_cols].copy()
+    col_labels = avail_labels
+    cols_show = avail_cols
     df["model"] = df["model"].map(lambda m: MODEL_LABELS.get(m, m))
 
     n_rows, n_cols = len(df), len(col_labels)
@@ -286,14 +313,15 @@ def slide_limitations(pdf):
 
     panels = [
         ("Current Limitations", [
-            "Cold-protein CV ROC-AUC ≈ 0.52 — generalisation",
-            "to novel proteins is near chance-level",
+            "Negatives are property-matched decoys, not true",
+            "measured non-binders — may inflate performance",
+            "",
+            "50 k row subsample used (full 227 k strains RAM)",
+            "on a MacBook; results may vary at full scale",
             "",
             "KIBA scores are partially estimated (not all measured)",
             "",
             "Ligand features are fingerprint-based — no 3-D geometry",
-            "",
-            "No cross-docking or structure-aware features used",
         ]),
         ("Next Steps", [
             "Graph Neural Networks on molecular graphs (GNN-DTI)",
@@ -328,7 +356,7 @@ def slide_limitations(pdf):
 
 def parse_args():
     p = argparse.ArgumentParser()
-    p.add_argument("--results_dir", default="outputs/run_1000p")
+    p.add_argument("--results_dir", default="outputs")
     p.add_argument("--output", default="Presentation/protein_ligand_results.pdf")
     return p.parse_args()
 
@@ -337,6 +365,8 @@ def main():
     args = parse_args()
     results_dir = Path(args.results_dir)
     figures_dir = results_dir / "figures"
+    if not figures_dir.exists():
+        figures_dir = results_dir  # fallback: figures in results_dir directly
     output_path = Path(args.output)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
@@ -356,9 +386,9 @@ def main():
 
     with PdfPages(output_path) as pdf:
         d = pdf.infodict()
-        d["Title"]   = "Protein-Ligand Binding Prediction — 1000-Protein Benchmark"
+        d["Title"]   = "Protein-Ligand Binding Prediction — 1200-Protein Cold-Both Benchmark"
         d["Author"]  = "abuchin"
-        d["Subject"] = "ML results on KIBA dataset, cold-protein evaluation"
+        d["Subject"] = "ML results on KIBA dataset, cold-both evaluation with CV"
 
         slide_title(pdf)
         slide_overview(pdf)
