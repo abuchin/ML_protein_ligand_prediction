@@ -33,4 +33,6 @@ data/cache/
 *.log
 
 # Large binary outputs that are regenerated each run
-# (keep model .pkl/.pt and processed data — they're tracked)
+outputs/models/
+outputs/logs/
+Data/processed/

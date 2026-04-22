@@ -40,6 +40,7 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--tune", action="store_true", help="Run hyperparameter tuning")
     parser.add_argument("--no_mlp", action="store_true", help="Skip InteractionMLP (faster smoke tests)")
     parser.add_argument("--device", default=None, help="Override device for MLP: auto|cpu|cuda|mps")
+    parser.add_argument("--batch_size", type=int, default=None, help="Override MLP batch size (default: CFG.batch_size)")
     parser.add_argument("--n_samples", type=int, default=None)
     parser.add_argument("--output_dir", default=None, help="Override CFG.outputs_dir for this run")
     parser.add_argument("--log_level", default="INFO")
@@ -110,6 +111,7 @@ def main() -> None:
 
     # ── Run pipeline ──────────────────────────────────────────────────────────
     mlp_device = args.device or CFG.device
+    mlp_batch_size = args.batch_size if args.batch_size else CFG.batch_size
     pipeline = TrainingPipeline(
         X=X,
         y=y,
@@ -125,6 +127,7 @@ def main() -> None:
         tune=args.tune,
         output_dir=output_dir,
         mlp_device=mlp_device,
+        mlp_batch_size=mlp_batch_size,
     )
 
     results = pipeline.run()

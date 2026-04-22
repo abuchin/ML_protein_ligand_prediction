@@ -65,6 +65,7 @@ class TrainingPipeline:
         tune: bool = False,
         output_dir: Optional[Path] = None,
         mlp_device: str = "auto",
+        mlp_batch_size: Optional[int] = None,
     ) -> None:
         self.X = X
         self.y = y
@@ -80,6 +81,7 @@ class TrainingPipeline:
         self.tune = tune
         self.output_dir = Path(output_dir) if output_dir else CFG.outputs_dir
         self.mlp_device = mlp_device
+        self.mlp_batch_size = mlp_batch_size if mlp_batch_size is not None else CFG.batch_size
 
     # ── Main entry point ──────────────────────────────────────────────────────
 
@@ -140,6 +142,9 @@ class TrainingPipeline:
                 metrics.get("f1_binary", float("nan")),
             )
             model.save_model(self.output_dir / "models" / f"{name}.pkl")
+            # Free scaled data matrices — no longer needed after save
+            model.X_train = None
+            model.X_test = None
 
         # ── CV with protein-aware groups (all sklearn models) ──
         # XGBoost is re-instantiated without early_stopping_rounds because
@@ -179,6 +184,15 @@ class TrainingPipeline:
             except Exception as exc:
                 logger.warning("CV failed for %s: %s", cv_name, exc)
 
+        # Free all flat-feature memory before MLP — blocks are all that's needed.
+        import gc
+        del X_train, X_val, X_test
+        self.X = None  # release self.X so gc can reclaim the full flat matrix
+        self.y = None
+        X = None  # local ref
+        y = None
+        gc.collect()
+
         # ── InteractionMLP ──
         if self.protein_block is not None and self.ligand_block is not None:
             logger.info("--- InteractionMLP ---")
@@ -193,7 +207,7 @@ class TrainingPipeline:
                     fusion_dims=CFG.fusion_dims,
                     dropout=CFG.dropout,
                     lr=CFG.lr,
-                    batch_size=CFG.batch_size,
+                    batch_size=self.mlp_batch_size,
                     epochs=CFG.epochs,
                     patience=CFG.patience,
                     device=self.mlp_device,
