@@ -184,9 +184,10 @@ class TrainingPipeline:
             except Exception as exc:
                 logger.warning("CV failed for %s: %s", cv_name, exc)
 
-        # Free all flat-feature memory before MLP — blocks are all that's needed.
+        # Free training/validation flat matrices before MLP.
+        # X_test is kept — the cold-start evaluator needs it for sklearn models.
         import gc
-        del X_train, X_val, X_test
+        del X_train, X_val
         self.X = None  # release self.X so gc can reclaim the full flat matrix
         self.y = None
         X = None  # local ref

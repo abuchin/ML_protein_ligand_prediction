@@ -96,7 +96,7 @@ def slide_title(pdf):
     fig.text(0.5, 0.50, "Machine Learning on the KIBA Dataset",
              fontsize=22, color=ACCENT, ha="center", va="center")
     fig.text(0.5, 0.42,
-             "1 200-protein benchmark  ·  Cold-both evaluation  ·  4 models + CV",
+             "1 200-protein benchmark  ·  Cold-both evaluation  ·  5 models + CV",
              fontsize=14, color=SUBTEXT, ha="center", va="center")
     ax = fig.add_axes([0.3, 0.37, 0.4, 0.003])
     ax.set_facecolor(ACCENT); ax.axis("off")
@@ -116,7 +116,7 @@ def slide_overview(pdf):
         ("2  Proteins",   "UniProt sequences\n→ ESM-2 (35M)\nmean+max pooling\ndim = 960"),
         ("3  Ligands",    "PubChem SMILES\n→ Morgan+MACCS+\natom-pair FPs\n+ RDKit  dim=2229"),
         ("4  Split",      "Cold-both\n(unseen proteins\nAND unseen binders\nin test set)"),
-        ("5  Models",     "Logistic Reg.\nRandom Forest\nXGBoost · LightGBM\n+ 5-fold CV"),
+        ("5  Models",     "Logistic Reg.\nRandom Forest\nXGBoost · LightGBM\nInteractionMLP\n+ 5-fold CV"),
         ("6  Evaluation", "ROC-AUC · PR-AUC\nBEDROC · EF@1%/5%\n5-fold protein-\naware CV"),
     ]
 

@@ -74,14 +74,14 @@ class Config:
     n_samples: Optional[int] = None  # None = use full dataset; set int for fast dev runs
 
     # ── MLP (InteractionMLP) ─────────────────────────────────────────────────
-    projection_dim: int = 256
+    projection_dim: int = 512
     aux_projection_dim: int = 64
     fusion_dims: Tuple[int, ...] = (512, 256)
     dropout: float = 0.3
     lr: float = 1e-3
     batch_size: int = 64
-    epochs: int = 50
-    patience: int = 10          # early stopping patience (epochs)
+    epochs: int = 100
+    patience: int = 15          # early stopping patience (epochs)
 
     # ── Evaluation ───────────────────────────────────────────────────────────
     shap_background_samples: int = 200
