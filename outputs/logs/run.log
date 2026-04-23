@@ -1850,3 +1850,15 @@ lightgbm             0.955175   0.960541  0.954330          0.965082       0.956
 2026-04-22 13:01:07  INFO      plbind.training.pipeline  --- logistic_regression ---
 2026-04-22 13:01:30  INFO      plbind.training.pipeline  logistic_regression split: 168744 train / 27285 test  (pos_rate_train=0.549)
 2026-04-22 13:01:31  INFO      plbind.models.base  Training Logistic Regression...
+2026-04-23 14:00:05  INFO      __main__  === Training Pipeline START ===
+2026-04-23 14:00:05  INFO      __main__  Split: cold_protein | tune: False | n_samples: None
+2026-04-23 14:00:05  INFO      __main__  Loaded 227609 rows, 1200 proteins, 110749 ligands.
+2026-04-23 14:00:05  INFO      __main__  Protein subsample: selected 1000 proteins → 201195 rows.
+2026-04-23 14:00:26  INFO      __main__  Feature matrix: (201195, 3283)  (protein=960, ligand=2229, aux=94)
+2026-04-23 14:00:26  INFO      plbind.training.pipeline  === Training Pipeline START ===
+2026-04-23 14:00:26  INFO      plbind.training.pipeline  Split strategy: cold_protein | tune: False | n_samples: None
+2026-04-23 14:00:26  INFO      plbind.training.splitter  Split [cold_protein]: train: 149031 rows, pos_rate=0.553 | val: 16912 rows, pos_rate=0.522 | test: 35252 rows, pos_rate=0.540
+2026-04-23 14:00:26  INFO      plbind.training.splitter  Protein leakage check: OK (no shared proteins in train/test)
+2026-04-23 14:00:28  INFO      plbind.training.pipeline  --- logistic_regression ---
+2026-04-23 14:00:53  INFO      plbind.training.pipeline  logistic_regression split: 149031 train / 35252 test  (pos_rate_train=0.553)
+2026-04-23 14:00:53  INFO      plbind.models.base  Training Logistic Regression...

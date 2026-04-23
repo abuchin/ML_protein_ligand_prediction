@@ -42,6 +42,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--device", default=None, help="Override device for MLP: auto|cpu|cuda|mps")
     parser.add_argument("--batch_size", type=int, default=None, help="Override MLP batch size (default: CFG.batch_size)")
     parser.add_argument("--n_samples", type=int, default=None)
+    parser.add_argument("--n_proteins", type=int, default=None,
+                        help="Randomly select N proteins and keep all their rows (protein-level subsampling)")
     parser.add_argument("--output_dir", default=None, help="Override CFG.outputs_dir for this run")
     parser.add_argument("--log_level", default="INFO")
     return parser.parse_args()
@@ -87,11 +89,17 @@ def main() -> None:
 
     # Early subsample: filter combined BEFORE building the feature matrix so
     # the matrix never grows to full-dataset size in RAM.
-    if args.n_samples and args.n_samples < len(combined):
+    if args.n_proteins and args.n_proteins < combined["UniProt_ID"].nunique():
+        rng = np.random.default_rng(CFG.random_seed)
+        all_proteins = combined["UniProt_ID"].unique()
+        chosen = rng.choice(all_proteins, size=args.n_proteins, replace=False)
+        combined = combined[combined["UniProt_ID"].isin(chosen)].reset_index(drop=True)
+        logger.info("Protein subsample: selected %d proteins → %d rows.", args.n_proteins, len(combined))
+    elif args.n_samples and args.n_samples < len(combined):
         rng = np.random.default_rng(CFG.random_seed)
         idx = rng.choice(len(combined), size=args.n_samples, replace=False)
         combined = combined.iloc[idx].reset_index(drop=True)
-        logger.info("Early subsample: %d → %d rows before feature build.", args.n_samples + (len(combined) - args.n_samples), len(combined))
+        logger.info("Row subsample: %d rows.", len(combined))
 
     # ── Build feature matrix ──────────────────────────────────────────────────
     builder = FeatureBuilder(
