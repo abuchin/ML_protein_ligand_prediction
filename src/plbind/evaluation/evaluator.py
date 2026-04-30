@@ -193,7 +193,7 @@ class ModelEvaluator:
         ax.legend()
         if save_path:
             plt.savefig(save_path, dpi=200, bbox_inches="tight")
-        plt.show()
+        plt.close()
 
     # ── Persistence ───────────────────────────────────────────────────────────
 

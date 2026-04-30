@@ -163,6 +163,9 @@ This script:
 # Quick dev run on 500 rows
 python scripts/run_data_prep.py --n_samples 500
 
+# Subsample by protein (keeps all rows for the selected proteins)
+python scripts/run_data_prep.py --n_proteins 200
+
 # Use only experimentally measured KIBA scores (exclude imputed)
 python scripts/run_data_prep.py --keep_measured
 
@@ -187,8 +190,7 @@ This script:
 1. Loads all processed feature files from `Data/processed/`.
 2. Builds the combined feature matrix (protein embeddings + ligand fingerprints + aux features).
 3. Splits the data using the configured strategy (`cold_protein` by default).
-4. Trains four tree/linear models: **Logistic Regression**, **Random Forest**, **XGBoost**, **LightGBM**.
-5. Optionally trains an **InteractionMLP** (separate protein/ligand projection heads + fusion layers).
+4. Trains five models: **Logistic Regression**, **Random Forest**, **XGBoost**, **LightGBM**, and **InteractionMLP** (separate protein/ligand projection heads + fusion layers).
 6. Evaluates with ROC-AUC, PR-AUC, F1, Enrichment Factor at 1%/5%, and BEDROC.
 7. Runs cold-protein evaluation on held-out proteins.
 8. Saves trained models to `outputs/models/`, metrics to `outputs/results.json`, and predictions to `outputs/predictions/`.
@@ -201,7 +203,7 @@ python scripts/run_training.py --split random
 python scripts/run_training.py --split cold_protein    # default; recommended
 python scripts/run_training.py --split cold_ligand
 python scripts/run_training.py --split scaffold
-python scripts/run_training.py --split cold_both
+python scripts/run_training.py --split cold_both       # hardest; most realistic
 
 # Enable hyperparameter tuning (GridSearchCV)
 python scripts/run_training.py --tune
@@ -209,11 +211,23 @@ python scripts/run_training.py --tune
 # Skip the MLP (faster smoke test)
 python scripts/run_training.py --no_mlp
 
-# Fast dev run on 1000 samples
-python scripts/run_training.py --n_samples 1000
+# Subsample by protein (keeps all rows for the selected proteins)
+python scripts/run_training.py --n_proteins 1000
 
-# Combine flags
-python scripts/run_training.py --split cold_protein --tune --n_samples 2000
+# Subsample by row count
+python scripts/run_training.py --n_samples 5000
+
+# Override MLP training settings (useful for fast iteration)
+python scripts/run_training.py --mlp_epochs 40 --mlp_patience 8 --batch_size 512
+
+# Override device for MLP (auto | cpu | cuda | mps)
+python scripts/run_training.py --device cpu
+
+# Write results to a custom directory
+python scripts/run_training.py --output_dir outputs/run_experiment_1
+
+# Verbose debug logging
+python scripts/run_training.py --log_level DEBUG
 ```
 
 **Outputs saved to `outputs/`:**
@@ -221,9 +235,11 @@ python scripts/run_training.py --split cold_protein --tune --n_samples 2000
 | Path | Contents |
 |---|---|
 | `outputs/models/*.pkl` | Serialised trained models |
-| `outputs/results.json` | All metrics per model |
+| `outputs/results.json` | All metrics per model (incl. CV and SHAP group importance) |
 | `outputs/model_comparison.csv` | Side-by-side metric table |
-| `outputs/predictions/` | Per-model prediction CSVs |
+| `outputs/predictions/` | Per-model prediction CSVs (y_true, y_pred, y_proba) |
+| `outputs/figures/` | SHAP summary and feature-group importance plots |
+| `outputs/shap/` | Raw SHAP value arrays (.npy) |
 | `outputs/logs/run.log` | Full run log |
 
 ---
@@ -273,25 +289,36 @@ pytest tests/test_models.py::TestMLPModel::test_save_load_roundtrip -v
 |---|---|
 | `tests/test_models.py` | LR, RF, XGBoost, MLP — split, train, predict, save/load, tuning |
 | `tests/test_evaluator.py` | Metric computation, model comparison table |
-| `tests/test_feature_engineer.py` | FeatureBuilder assembly and shapes |
+| `tests/test_feature_engineer.py` | FeatureBuilder assembly, block_map correctness, shapes |
 | `tests/test_model_factory.py` | ModelFactory instantiation for all model types |
+| `tests/test_preprocessor.py` | Label creation, threshold boundary, duplicate handling, decoy generation |
+| `tests/test_splitter.py` | random/cold-protein/cold-ligand/cold-both split strategies |
+| `tests/test_interpretability.py` | SHAPAnalyzer — feature group importance, top features, plot helpers |
 
 ---
 
 ## Results
 
-Results below are from a cold-protein split (proteins held out entirely from training):
+Results below are from the **1000-protein cold-both benchmark** (unseen proteins AND unseen ligands in the test set — the hardest realistic setting):
 
 | Model | ROC-AUC | PR-AUC | F1 | Accuracy |
 |---|---|---|---|---|
-| Logistic Regression | 1.000 | 1.000 | 1.000 | 1.000 |
-| Random Forest | 1.000 | 1.000 | 1.000 | 1.000 |
-| XGBoost | 0.996 | 0.995 | 0.958 | 0.960 |
-| LightGBM | 0.997 | 0.997 | 0.963 | 0.965 |
+| LightGBM | 0.998 | 0.9996 | 0.989 | 0.982 |
+| Random Forest | 0.998 | 0.9995 | 0.996 | 0.993 |
+| XGBoost | 0.997 | 0.9993 | 0.995 | 0.992 |
+| InteractionMLP | 0.993 | 0.9986 | 0.969 | 0.948 |
+| Logistic Regression | 0.977 | 0.9960 | 0.946 | 0.913 |
 
-Cross-validated logistic regression (5-fold, cold-protein) ROC-AUC: **0.534 ± 0.023**, reflecting the difficulty of the true cold-start setting. The near-perfect held-out results come from the random-split evaluation and indicate data leakage is absent from the pipeline design.
+5-fold protein-aware cross-validation (StratifiedGroupKFold) ROC-AUC:
 
-Full metrics including Enrichment Factor at 1%/5% and BEDROC are in `outputs/results.json`.
+| Model | CV ROC-AUC |
+|---|---|
+| Random Forest | 0.994 ± 0.003 |
+| XGBoost | 0.993 ± 0.003 |
+| LightGBM | 0.993 ± 0.003 |
+| Logistic Regression | 0.975 ± 0.005 |
+
+Full metrics including Enrichment Factor at 1%/5% and BEDROC are in `outputs/results.json`. The presentation PDF with ROC/PR curves, confusion matrices, SHAP feature importance, and CV results is at `Presentation/protein_ligand_results.pdf`.
 
 ---
 
