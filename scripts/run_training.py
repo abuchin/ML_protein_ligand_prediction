@@ -41,6 +41,8 @@ def parse_args() -> argparse.Namespace:
     parser.add_argument("--no_mlp", action="store_true", help="Skip InteractionMLP (faster smoke tests)")
     parser.add_argument("--device", default=None, help="Override device for MLP: auto|cpu|cuda|mps")
     parser.add_argument("--batch_size", type=int, default=None, help="Override MLP batch size (default: CFG.batch_size)")
+    parser.add_argument("--mlp_epochs", type=int, default=None, help="Override MLP max epochs (default: CFG.epochs)")
+    parser.add_argument("--mlp_patience", type=int, default=None, help="Override MLP early-stopping patience (default: CFG.patience)")
     parser.add_argument("--n_samples", type=int, default=None)
     parser.add_argument("--n_proteins", type=int, default=None,
                         help="Randomly select N proteins and keep all their rows (protein-level subsampling)")
@@ -136,6 +138,8 @@ def main() -> None:
         output_dir=output_dir,
         mlp_device=mlp_device,
         mlp_batch_size=mlp_batch_size,
+        mlp_epochs=args.mlp_epochs,
+        mlp_patience=args.mlp_patience,
     )
 
     results = pipeline.run()

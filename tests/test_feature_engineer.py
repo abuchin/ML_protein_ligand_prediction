@@ -141,3 +141,26 @@ class TestBlockMap:
         bm = _make_builder().block_map
         assert bm["protein"].stop == bm["ligand"].start
         assert bm["ligand"].stop == bm["aux"].start
+
+    def test_slices_cover_total_dim(self):
+        b = _make_builder()
+        bm = b.block_map
+        total = b.total_dim
+        covered = set()
+        for slc in bm.values():
+            covered.update(range(slc.start, slc.stop))
+        assert len(covered) == total
+
+    def test_slices_non_overlapping(self):
+        bm = _make_builder().block_map
+        seen = []
+        for slc in bm.values():
+            for idx in range(slc.start, slc.stop):
+                assert idx not in seen, f"Index {idx} appears in multiple blocks"
+                seen.append(idx)
+
+    def test_block_map_with_aux(self):
+        b = _make_builder(with_aux=True)
+        bm = b.block_map
+        assert bm["aux"].stop - bm["aux"].start == 2  # 2 aux columns
+        assert bm["aux"].start == bm["ligand"].stop

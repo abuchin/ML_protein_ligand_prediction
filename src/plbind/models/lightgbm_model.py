@@ -77,7 +77,10 @@ class LightGBMModel(BaseModel):
             from lightgbm import early_stopping, log_evaluation
             callbacks = [early_stopping(self.early_stopping_rounds, verbose=False), log_evaluation(-1)]
         except ImportError:
-            pass
+            logger.warning(
+                "LightGBM early_stopping/log_evaluation callbacks unavailable; "
+                "training without early stopping."
+            )
 
         self.model.fit(X_tr, y_tr, eval_set=[(X_val, y_val)], callbacks=callbacks or None)
         if hasattr(self.model, "best_iteration_"):

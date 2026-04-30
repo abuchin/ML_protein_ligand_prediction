@@ -66,6 +66,8 @@ class TrainingPipeline:
         output_dir: Optional[Path] = None,
         mlp_device: str = "auto",
         mlp_batch_size: Optional[int] = None,
+        mlp_epochs: Optional[int] = None,
+        mlp_patience: Optional[int] = None,
     ) -> None:
         self.X = X
         self.y = y
@@ -82,6 +84,8 @@ class TrainingPipeline:
         self.output_dir = Path(output_dir) if output_dir else CFG.outputs_dir
         self.mlp_device = mlp_device
         self.mlp_batch_size = mlp_batch_size if mlp_batch_size is not None else CFG.batch_size
+        self.mlp_epochs = mlp_epochs if mlp_epochs is not None else CFG.epochs
+        self.mlp_patience = mlp_patience if mlp_patience is not None else CFG.patience
 
     # ── Main entry point ──────────────────────────────────────────────────────
 
@@ -94,7 +98,11 @@ class TrainingPipeline:
         X, y, df = self._subsample(self.X, self.y, self.df)
 
         # ── Split ──
-        splitter = Splitter(random_state=self.random_seed)
+        splitter = Splitter(
+            test_size=CFG.test_size,
+            val_size=CFG.val_size,
+            random_state=self.random_seed,
+        )
         train_df, val_df, test_df = splitter.split(df, self.split_strategy)
 
         train_idx = train_df.index
@@ -142,6 +150,9 @@ class TrainingPipeline:
                 metrics.get("f1_binary", float("nan")),
             )
             model.save_model(self.output_dir / "models" / f"{name}.pkl")
+            shap_result = self._run_shap(name, model)
+            if shap_result is not None:
+                results[name]["shap_group_importance"] = shap_result
             # Free scaled data matrices — no longer needed after save
             model.X_train = None
             model.X_test = None
@@ -169,7 +180,7 @@ class TrainingPipeline:
             try:
                 logger.info("CV: %s ...", cv_name)
                 cv_result = ModelEvaluator.cross_validate(
-                    estimator, X, y, groups=groups_all, cv=5,
+                    estimator, X, y, groups=groups_all, cv=CFG.cv_folds,
                     random_state=self.random_seed,
                 )
                 results[f"cv_{cv_name}"] = cv_result
@@ -197,6 +208,10 @@ class TrainingPipeline:
         # ── InteractionMLP ──
         if self.protein_block is not None and self.ligand_block is not None:
             logger.info("--- InteractionMLP ---")
+            # sklearn CV leaves OpenMP threads in a broken barrier state; forcing
+            # single-threaded mode prevents torch.randperm from deadlocking.
+            import torch as _torch
+            _torch.set_num_threads(1)
             try:
                 aux_dim = self.aux_block.shape[1] if self.aux_block is not None else 0
                 mlp = InteractionMLPModel(
@@ -209,8 +224,9 @@ class TrainingPipeline:
                     dropout=CFG.dropout,
                     lr=CFG.lr,
                     batch_size=self.mlp_batch_size,
-                    epochs=CFG.epochs,
-                    patience=CFG.patience,
+                    epochs=self.mlp_epochs,
+                    patience=self.mlp_patience,
+                    lr_scheduler_patience=CFG.lr_scheduler_patience,
                     device=self.mlp_device,
                     random_state=self.random_seed,
                 )
@@ -260,6 +276,47 @@ class TrainingPipeline:
         return results
 
     # ── Helpers ───────────────────────────────────────────────────────────────
+
+    def _run_shap(self, name: str, model) -> Optional[dict]:
+        """Compute SHAP values for one trained model; save plots and values to outputs/.
+
+        Returns a dict of group importance fractions, or None if SHAP is unavailable.
+        """
+        try:
+            import shap as _shap  # noqa: F401 — verify importability
+            from plbind.evaluation.interpretability import SHAPAnalyzer
+        except ImportError:
+            return None
+        try:
+            analyzer = SHAPAnalyzer(
+                feature_names=self.feature_names,
+                block_map=self.block_map,
+            )
+            n_bg = min(CFG.shap_background_samples, len(model.X_train))
+            shap_vals = analyzer.explain_tree(model, model.X_test, max_samples=n_bg)
+
+            shap_dir = self.output_dir / "shap"
+            shap_dir.mkdir(parents=True, exist_ok=True)
+            raw = shap_vals.values if hasattr(shap_vals, "values") else shap_vals
+            np.save(shap_dir / f"{name}_shap_values.npy", raw)
+
+            group_imp = analyzer.feature_group_importance(shap_vals)
+            fig_dir = self.output_dir / "figures"
+            fig_dir.mkdir(parents=True, exist_ok=True)
+            analyzer.plot_summary(
+                shap_vals, model.X_test,
+                save_path=fig_dir / f"shap_{name}.png",
+            )
+            analyzer.plot_group_importance(
+                shap_vals,
+                save_path=fig_dir / f"shap_groups_{name}.png",
+            )
+            logger.info("SHAP done for %s — group importance: %s",
+                        name, group_imp.set_index("block")["fraction"].to_dict())
+            return group_imp.to_dict(orient="list")
+        except Exception as exc:
+            logger.warning("SHAP failed for %s: %s", name, exc)
+            return None
 
     def _subsample(
         self, X: np.ndarray, y: np.ndarray, df: pd.DataFrame

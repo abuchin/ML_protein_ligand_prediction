@@ -60,8 +60,14 @@ class FocalLoss(nn.Module):
     def forward(self, logits: torch.Tensor, targets: torch.Tensor) -> torch.Tensor:
         bce = F.cross_entropy(logits, targets, reduction="none")
         probs = torch.softmax(logits, dim=1)
-        pt = probs[torch.arange(len(targets)), targets]
-        alpha_t = torch.where(targets == 1, self.alpha, 1 - self.alpha)
+        # Use targets.device to avoid CPU/MPS device mismatch with arange
+        idx = torch.arange(len(targets), device=targets.device)
+        pt = probs[idx, targets]
+        alpha_t = torch.where(
+            targets == 1,
+            torch.tensor(self.alpha, device=targets.device),
+            torch.tensor(1 - self.alpha, device=targets.device),
+        )
         focal_weight = alpha_t * (1 - pt) ** self.gamma
         return (focal_weight * bce).mean()
 
@@ -151,7 +157,8 @@ class InteractionMLPModel(BaseModel):
         lr: float = 1e-3,
         batch_size: int = 64,
         epochs: int = 100,
-        patience: int = 10,
+        patience: int = 15,
+        lr_scheduler_patience: int = 3,
         device: str = "auto",
         test_size: float = 0.2,
         random_state: int = 42,
@@ -168,12 +175,13 @@ class InteractionMLPModel(BaseModel):
         self.batch_size = batch_size
         self.epochs = epochs
         self.patience = patience
+        self.lr_scheduler_patience = lr_scheduler_patience
 
         if device == "auto":
             if torch.cuda.is_available():
                 self._device = torch.device("cuda")
-            elif hasattr(torch.backends, "mps") and torch.backends.mps.is_available():
-                self._device = torch.device("mps")
+            # MPS skipped in auto-mode: BatchNorm1d backward hangs on MPS with
+            # PyTorch 2.8 + macOS 15 (Sequoia). Use --device mps to force it.
             else:
                 self._device = torch.device("cpu")
         else:
@@ -257,7 +265,7 @@ class InteractionMLPModel(BaseModel):
 
         self._net = self._initialize_model()
         optimizer = torch.optim.Adam(self._net.parameters(), lr=self.lr, weight_decay=1e-5)
-        scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=3, factor=0.5)
+        scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=self.lr_scheduler_patience, factor=0.5)
         criterion = FocalLoss(gamma=2.0, alpha=0.25)
         use_amp = self._device.type == "cuda"
         scaler = torch.amp.GradScaler("cuda") if use_amp else None

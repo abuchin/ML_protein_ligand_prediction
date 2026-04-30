@@ -162,6 +162,7 @@ def main() -> None:
         model_name=CFG.protein_encoder,
         pooling=CFG.protein_pooling,
         cache_dir=CFG.cache_dir,
+        max_length=CFG.protein_max_length,
     )
     uids_with_seq = [uid for uid in uniprot_ids if uid in sequences]
     seqs_to_encode = [sequences[uid] for uid in uids_with_seq]
@@ -183,7 +184,13 @@ def main() -> None:
     cid_list = combined["pubchem_cid"].unique().tolist()
     cid_smiles_subset = {cid: smiles_map[cid] for cid in cid_list if cid in smiles_map}
 
-    lig_encoder = LigandEncoder(morgan_radius=CFG.morgan_radius, morgan_bits=CFG.morgan_bits)
+    lig_encoder = LigandEncoder(
+        morgan_radius=CFG.morgan_radius,
+        morgan_bits=CFG.morgan_bits,
+        use_maccs=CFG.use_maccs,
+        use_atompair=CFG.use_atompair,
+        morgan_use_counts=CFG.morgan_use_counts,
+    )
     cid_to_row, fp_matrix, desc_matrix = lig_encoder.encode_batch(
         cid_smiles_subset, cache_dir=CFG.processed_dir
     )

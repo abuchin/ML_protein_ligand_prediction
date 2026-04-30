@@ -16,9 +16,9 @@ LogisticRegression all accept sparse input directly.
 from __future__ import annotations
 
 import logging
-from concurrent.futures import ProcessPoolExecutor, as_completed
+from concurrent.futures import ProcessPoolExecutor
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Any, Dict, List, Optional, Tuple
 
 import numpy as np
 import scipy.sparse as sp
@@ -51,6 +51,18 @@ TOTAL_FINGERPRINT_BITS = MORGAN_BITS + MACCS_BITS + ATOMPAIR_BITS  # 2214
 TOTAL_FEATURES = TOTAL_FINGERPRINT_BITS + len(DESCRIPTOR_NAMES)    # 2229
 
 
+def _encode_chunk_fn(args: Tuple[List, Dict[str, Any]]) -> Dict[int, Dict]:
+    """Module-level worker for ProcessPoolExecutor (must be top-level to be picklable)."""
+    chunk, params = args
+    enc = LigandEncoder(**params)
+    out: Dict[int, Dict] = {}
+    for cid, smi in chunk:
+        r = enc.encode_smiles(smi)
+        if r is not None:
+            out[cid] = r
+    return out
+
+
 class LigandEncoder:
     """Compute all ligand features from a SMILES string.
 
@@ -58,6 +70,9 @@ class LigandEncoder:
         morgan_radius:     Circular neighbourhood radius (2 = ECFP4).
         morgan_bits:       Hash length for Morgan count fingerprint.
         atompair_bits:     Hash length for atom-pair fingerprint.
+        use_maccs:         Include 166-bit MACCS pharmacophore keys.
+        use_atompair:      Include 1024-bit atom-pair fingerprint.
+        morgan_use_counts: Use count fingerprint; if False, binarizes to 0/1.
         n_workers:         Parallel workers for batch processing.
     """
 
@@ -66,31 +81,49 @@ class LigandEncoder:
         morgan_radius: int = 2,
         morgan_bits: int = MORGAN_BITS,
         atompair_bits: int = ATOMPAIR_BITS,
+        use_maccs: bool = True,
+        use_atompair: bool = True,
+        morgan_use_counts: bool = True,
         n_workers: int = 4,
     ) -> None:
         self.morgan_radius = morgan_radius
         self.morgan_bits = morgan_bits
         self.atompair_bits = atompair_bits
+        self.use_maccs = use_maccs
+        self.use_atompair = use_atompair
+        self.morgan_use_counts = morgan_use_counts
         self.n_workers = n_workers
+
+    @property
+    def fp_dim(self) -> int:
+        """Total fingerprint dimension based on enabled blocks."""
+        dim = self.morgan_bits
+        if self.use_maccs:
+            dim += MACCS_BITS
+        if self.use_atompair:
+            dim += self.atompair_bits
+        return dim
 
     # ── Feature names ─────────────────────────────────────────────────────────
 
     @property
     def feature_names(self) -> List[str]:
-        morgan_names = [f"morgan_{i}" for i in range(self.morgan_bits)]
-        maccs_names = [f"maccs_{i}" for i in range(1, MACCS_BITS + 1)]
-        ap_names = [f"atompair_{i}" for i in range(self.atompair_bits)]
-        return morgan_names + maccs_names + ap_names + DESCRIPTOR_NAMES
+        names = [f"morgan_{i}" for i in range(self.morgan_bits)]
+        if self.use_maccs:
+            names += [f"maccs_{i}" for i in range(1, MACCS_BITS + 1)]
+        if self.use_atompair:
+            names += [f"atompair_{i}" for i in range(self.atompair_bits)]
+        return names + DESCRIPTOR_NAMES
 
     # ── Single-molecule encoding ──────────────────────────────────────────────
 
     def encode_smiles(self, smiles: str) -> Optional[Dict]:
         """Encode a single SMILES string.
 
-        Returns dict with keys:
-            "morgan"      — np.ndarray int32 (1024,)
-            "maccs"       — np.ndarray int32 (166,)
-            "atompair"    — np.ndarray int32 (1024,)
+        Returns dict with keys (only enabled blocks are included):
+            "morgan"      — np.ndarray int32 (morgan_bits,)
+            "maccs"       — np.ndarray int32 (166,)   [if use_maccs]
+            "atompair"    — np.ndarray int32 (atompair_bits,) [if use_atompair]
             "descriptors" — np.ndarray float32 (15,)
         Returns None if SMILES is invalid.
         """
@@ -99,12 +132,13 @@ class LigandEncoder:
             mol = Chem.MolFromSmiles(smiles)
             if mol is None:
                 return None
-            return {
-                "morgan": self._morgan_count(mol),
-                "maccs": self._maccs(mol),
-                "atompair": self._atompair(mol),
-                "descriptors": self._descriptors(mol),
-            }
+            result: Dict = {"morgan": self._morgan_count(mol)}
+            if self.use_maccs:
+                result["maccs"] = self._maccs(mol)
+            if self.use_atompair:
+                result["atompair"] = self._atompair(mol)
+            result["descriptors"] = self._descriptors(mol)
+            return result
         except Exception as exc:
             logger.debug("encode_smiles error for '%s': %s", smiles[:40], exc)
             return None
@@ -144,22 +178,28 @@ class LigandEncoder:
         logger.info("Encoding %d ligands...", len(cid_smiles))
         results: Dict[int, Dict] = {}
 
-        # Use multiprocessing for heavy RDKit computation
-        chunk_size = max(1, len(cid_smiles) // self.n_workers)
+        chunk_size = max(1, len(cid_smiles) // max(self.n_workers, 1))
         items = list(cid_smiles.items())
-
-        def _encode_chunk(chunk):
-            enc = LigandEncoder(self.morgan_radius, self.morgan_bits, self.atompair_bits)
-            out = {}
-            for cid, smi in chunk:
-                r = enc.encode_smiles(smi)
-                if r is not None:
-                    out[cid] = r
-            return out
-
         chunks = [items[i : i + chunk_size] for i in range(0, len(items), chunk_size)]
-        for chunk_result in [_encode_chunk(c) for c in chunks]:
-            results.update(chunk_result)
+        encoder_params = {
+            "morgan_radius": self.morgan_radius,
+            "morgan_bits": self.morgan_bits,
+            "atompair_bits": self.atompair_bits,
+            "use_maccs": self.use_maccs,
+            "use_atompair": self.use_atompair,
+            "morgan_use_counts": self.morgan_use_counts,
+        }
+        work = [(c, encoder_params) for c in chunks]
+
+        try:
+            with ProcessPoolExecutor(max_workers=self.n_workers) as executor:
+                for chunk_result in executor.map(_encode_chunk_fn, work):
+                    results.update(chunk_result)
+        except Exception as exc:
+            logger.warning("Multiprocessing failed (%s); falling back to sequential.", exc)
+            results.clear()
+            for item in work:
+                results.update(_encode_chunk_fn(item))
 
         n_dropped = len(cid_smiles) - len(results)
         if n_dropped:
@@ -168,14 +208,19 @@ class LigandEncoder:
         # Build output matrices
         cid_to_row: Dict[int, int] = {cid: i for i, cid in enumerate(sorted(results))}
         N = len(results)
-        fp_data = np.zeros((N, TOTAL_FINGERPRINT_BITS), dtype=np.int32)
+        fp_data = np.zeros((N, self.fp_dim), dtype=np.int32)
         desc_data = np.zeros((N, len(DESCRIPTOR_NAMES)), dtype=np.float32)
 
         for cid, row_idx in cid_to_row.items():
             r = results[cid]
-            fp_data[row_idx, :self.morgan_bits] = r["morgan"]
-            fp_data[row_idx, self.morgan_bits:self.morgan_bits + MACCS_BITS] = r["maccs"]
-            fp_data[row_idx, self.morgan_bits + MACCS_BITS:] = r["atompair"]
+            offset = 0
+            fp_data[row_idx, offset:offset + self.morgan_bits] = r["morgan"]
+            offset += self.morgan_bits
+            if self.use_maccs:
+                fp_data[row_idx, offset:offset + MACCS_BITS] = r["maccs"]
+                offset += MACCS_BITS
+            if self.use_atompair:
+                fp_data[row_idx, offset:offset + self.atompair_bits] = r["atompair"]
             desc_data[row_idx] = r["descriptors"]
 
         fp_sparse = sp.csr_matrix(fp_data, dtype=np.int32)
@@ -191,10 +236,10 @@ class LigandEncoder:
         from rdkit.Chem import rdMolDescriptors
         fp = rdMolDescriptors.GetHashedMorganFingerprint(mol, self.morgan_radius, self.morgan_bits)
         arr = np.zeros(self.morgan_bits, dtype=np.int32)
-        from rdkit.DataStructs import ConvertToNumpyArray
-        # GetHashedMorganFingerprint returns UIntSparseIntVect — convert via dict
         for idx, cnt in fp.GetNonzeroElements().items():
             arr[idx % self.morgan_bits] += cnt
+        if not self.morgan_use_counts:
+            arr = (arr > 0).astype(np.int32)
         return arr
 
     def _maccs(self, mol) -> np.ndarray:
@@ -208,10 +253,9 @@ class LigandEncoder:
 
     def _atompair(self, mol) -> np.ndarray:
         from rdkit.Chem.rdMolDescriptors import GetHashedAtomPairFingerprintAsBitVect
+        from rdkit.DataStructs import ConvertToNumpyArray
         fp = GetHashedAtomPairFingerprintAsBitVect(mol, nBits=self.atompair_bits)
         arr = np.zeros(self.atompair_bits, dtype=np.int32)
-        fp.ToList()
-        from rdkit.DataStructs import ConvertToNumpyArray
         ConvertToNumpyArray(fp, arr)
         return arr
 

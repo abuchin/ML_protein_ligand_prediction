@@ -94,7 +94,9 @@ class UniProtFetcher:
             logger.warning("Exception fetching metadata for %s: %s", uniprot_id, exc)
             return {}
 
-    def build_auxiliary_features(self, uniprot_ids: List[str]) -> pd.DataFrame:
+    def build_auxiliary_features(
+        self, uniprot_ids: List[str], fit_vocab: bool = True
+    ) -> pd.DataFrame:
         """Build one-hot + continuous auxiliary features for a list of UniProt IDs.
 
         Returns a DataFrame indexed by UniProt_ID with ~95 columns:
@@ -104,20 +106,28 @@ class UniProtFetcher:
             - Log sequence length (1 continuous column)
             - Organism category (4 binary columns: human / mouse / rat / other)
 
-        Vocabularies are fit on the provided list, so they must cover all
-        proteins that will be seen at inference time.
+        Args:
+            uniprot_ids: Proteins to encode.
+            fit_vocab:   If True (default), build GO/Pfam vocabularies from this list.
+                         Set False for val/test proteins to avoid leaking their term
+                         frequencies into the vocabulary used for training proteins.
         """
-        logger.info("Fetching metadata for %d proteins...", len(uniprot_ids))
+        logger.info("Fetching metadata for %d proteins (fit_vocab=%s)...", len(uniprot_ids), fit_vocab)
         meta: Dict[str, Dict] = {}
         for i, uid in enumerate(uniprot_ids):
             meta[uid] = self.fetch_metadata(uid)
             if (i + 1) % 50 == 0:
                 logger.info("  Fetched %d / %d", i + 1, len(uniprot_ids))
 
-        # Build vocabularies from the dataset
-        if self._go_vocab is None:
+        if fit_vocab:
             self._go_vocab = self._top_terms(meta, "go_mf", self.top_go)
-        if self._pfam_vocab is None:
+            self._pfam_vocab = self._top_terms(meta, "pfam", self.top_pfam)
+        elif self._go_vocab is None or self._pfam_vocab is None:
+            logger.warning(
+                "fit_vocab=False but vocabulary is not yet built; building from current proteins. "
+                "Call build_auxiliary_features on training proteins first."
+            )
+            self._go_vocab = self._top_terms(meta, "go_mf", self.top_go)
             self._pfam_vocab = self._top_terms(meta, "pfam", self.top_pfam)
 
         rows = {}

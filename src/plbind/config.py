@@ -82,6 +82,7 @@ class Config:
     batch_size: int = 64
     epochs: int = 100
     patience: int = 15          # early stopping patience (epochs)
+    lr_scheduler_patience: int = 3  # ReduceLROnPlateau patience
 
     # ── Evaluation ───────────────────────────────────────────────────────────
     shap_background_samples: int = 200

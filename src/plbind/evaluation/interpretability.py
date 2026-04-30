@@ -140,8 +140,14 @@ class SHAPAnalyzer:
         X: np.ndarray,
         max_display: int = 20,
         save_path: Optional[Path] = None,
+        show: bool = False,
     ) -> None:
-        """SHAP summary (beeswarm) plot."""
+        """SHAP summary (beeswarm) plot.
+
+        Args:
+            save_path: If provided, saves the figure to this path.
+            show:      If True, calls plt.show() (disable for headless/CI environments).
+        """
         import shap
         import matplotlib.pyplot as plt
 
@@ -154,22 +160,34 @@ class SHAPAnalyzer:
         if save_path:
             plt.savefig(save_path, dpi=200, bbox_inches="tight")
             logger.info("SHAP summary saved → %s", save_path)
-        plt.show()
+        if show:
+            plt.show()
+        else:
+            plt.close()
 
     def plot_group_importance(
         self,
         shap_values,
         save_path: Optional[Path] = None,
+        show: bool = False,
     ) -> None:
-        """Horizontal bar chart showing fraction of importance per feature block."""
+        """Horizontal bar chart showing fraction of importance per feature block.
+
+        Args:
+            save_path: If provided, saves the figure to this path.
+            show:      If True, calls plt.show() (disable for headless/CI environments).
+        """
         import matplotlib.pyplot as plt
 
         df = self.feature_group_importance(shap_values)
-        fig, ax = plt.subplots(figsize=(7, 3))
+        _, ax = plt.subplots(figsize=(7, 3))
         ax.barh(df["block"], df["fraction"] * 100)
         ax.set_xlabel("% of total SHAP importance")
         ax.set_title("Feature group importance")
         plt.tight_layout()
         if save_path:
             plt.savefig(save_path, dpi=200, bbox_inches="tight")
-        plt.show()
+        if show:
+            plt.show()
+        else:
+            plt.close()

@@ -158,34 +158,29 @@ class FeatureBuilder:
 
     def _extract_blocks(self, df: pd.DataFrame):
         """Extract aligned feature blocks, returning a boolean mask for valid rows."""
-        valid_rows = []
-        prot_rows = []
-        lig_fp_rows = []
-        lig_desc_rows = []
+        uid_vals = df["UniProt_ID"].values
+        cid_vals = df["pubchem_cid"].astype(int).values
+
+        prot_emb_list = [self.protein_embeddings.get(uid) for uid in uid_vals]
+        lig_row_list = [self.cid_to_row.get(int(cid)) for cid in cid_vals]
+
+        valid = [p is not None and l is not None
+                 for p, l in zip(prot_emb_list, lig_row_list)]
+        mask = pd.Series(valid, index=df.index)
+
+        valid_idx = [i for i, v in enumerate(valid) if v]
+        prot_rows = [prot_emb_list[i] for i in valid_idx]
+        lig_fp_rows = [lig_row_list[i] for i in valid_idx]
+        lig_desc_rows = [self.desc_matrix[lig_row_list[i]] for i in valid_idx]
+
         aux_rows = []
-
-        for idx, row in df.iterrows():
-            uid = row["UniProt_ID"]
-            cid = int(row["pubchem_cid"])
-
-            prot_emb = self.protein_embeddings.get(uid)
-            lig_row = self.cid_to_row.get(cid)
-
-            if prot_emb is None or lig_row is None:
-                valid_rows.append(False)
-                continue
-
-            valid_rows.append(True)
-            prot_rows.append(prot_emb)
-            lig_fp_rows.append(lig_row)
-            lig_desc_rows.append(self.desc_matrix[lig_row])
-
-            if self.aux_features is not None and uid in self.aux_features.index:
-                aux_rows.append(self.aux_features.loc[uid].values.astype(np.float32))
-            elif self.aux_features is not None:
-                aux_rows.append(np.zeros(self.aux_dim, dtype=np.float32))
-
-        mask = pd.Series(valid_rows, index=df.index)
+        if self.aux_features is not None:
+            valid_uids = [uid_vals[i] for i in valid_idx]
+            for uid in valid_uids:
+                if uid in self.aux_features.index:
+                    aux_rows.append(self.aux_features.loc[uid].values.astype(np.float32))
+                else:
+                    aux_rows.append(np.zeros(self.aux_dim, dtype=np.float32))
 
         protein_block = np.stack(prot_rows).astype(np.float32)
         lig_fp_block = self.fp_matrix[lig_fp_rows]  # sparse slice
