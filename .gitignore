@@ -33,6 +33,6 @@ data/cache/
 *.log
 
 # Large binary outputs that are regenerated each run
-outputs/models/
+# outputs/models/ tracked via Git LFS — do not ignore
 outputs/logs/
 Data/processed/
