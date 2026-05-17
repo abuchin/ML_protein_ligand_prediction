@@ -1,0 +1,3 @@
+Summary table saved → outputs/figures/summary_table.csv
+Models in summary: ['logistic_regression', 'random_forest', 'xgboost', 'lightgbm', 'interaction_mlp']
+Saved → Presentation/protein_ligand_results.pdf  (72 KB)

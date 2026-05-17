@@ -1,0 +1,345 @@
+2026-05-17 11:30:05  INFO      __main__  === Training Pipeline START ===
+2026-05-17 11:30:05  INFO      __main__  Split: cold_both | tune: False | n_samples: None
+2026-05-17 11:30:06  INFO      __main__  Loaded 436401 rows, 2271 proteins, 13361 ligands.
+2026-05-17 11:30:06  INFO      plbind.features.feature_builder  Attrition: dropped 421817 / 436401 rows (96.7%) — missing protein embedding or SMILES.
+2026-05-17 11:30:06  INFO      __main__  Feature matrix: (14584, 3283)  (protein=960, ligand=2229, aux=94)
+2026-05-17 11:30:06  INFO      plbind.training.pipeline  === Training Pipeline START ===
+2026-05-17 11:30:06  INFO      plbind.training.pipeline  Split strategy: cold_both | tune: False | n_samples: None
+2026-05-17 11:30:06  INFO      plbind.training.splitter  cold_both: test set 1381 rows, pos_rate=0.896 (filtered 6496 ligands known to bind training proteins).
+2026-05-17 11:30:06  INFO      plbind.training.splitter  Split [cold_both]: train: 10602 rows, pos_rate=0.861 | val: 1085 rows, pos_rate=0.906 | test: 1381 rows, pos_rate=0.896
+2026-05-17 11:30:06  INFO      plbind.training.splitter  Protein leakage check: OK (no shared proteins in train/test)
+2026-05-17 11:30:06  INFO      plbind.training.pipeline  --- logistic_regression ---
+2026-05-17 11:30:06  INFO      plbind.training.pipeline  logistic_regression split: 10602 train / 1381 test  (pos_rate_train=0.861)
+2026-05-17 11:30:06  INFO      plbind.models.base  Training Logistic Regression...
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: divide by zero encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: overflow encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: invalid value encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: divide by zero encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: overflow encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: invalid value encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: divide by zero encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: overflow encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+2026-05-17 11:30:08  INFO      plbind.models.base  Logistic Regression trained in 1.31s
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+2026-05-17 11:30:08  INFO      plbind.training.pipeline  logistic_regression → PR-AUC=0.9993  ROC-AUC=0.9937  F1=0.9705
+2026-05-17 11:30:08  INFO      plbind.models.base  Saved Logistic Regression → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/models/logistic_regression.pkl
+2026-05-17 11:30:08  WARNING   plbind.training.pipeline  SHAP failed for logistic_regression: Model type not yet supported by TreeExplainer: <class 'sklearn.linear_model._logistic.LogisticRegression'>
+2026-05-17 11:30:08  INFO      plbind.training.pipeline  --- random_forest ---
+2026-05-17 11:30:08  INFO      plbind.training.pipeline  random_forest split: 10602 train / 1381 test  (pos_rate_train=0.861)
+2026-05-17 11:30:08  INFO      plbind.models.base  Training Random Forest...
+2026-05-17 11:30:09  INFO      plbind.models.base  Random Forest trained in 1.20s
+2026-05-17 11:30:10  INFO      plbind.training.pipeline  random_forest → PR-AUC=0.9997  ROC-AUC=0.9971  F1=0.9919
+2026-05-17 11:30:10  INFO      plbind.models.base  Saved Random Forest → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/models/random_forest.pkl
+2026-05-17 11:30:10  INFO      plbind.evaluation.interpretability  Computing SHAP values (TreeExplainer) for 200 samples...
+2026-05-17 11:30:11  WARNING   plbind.training.pipeline  SHAP failed for random_forest: The beeswarm plot does not support plotting explanations with instances that have more than one dimension!
+2026-05-17 11:30:11  INFO      plbind.training.pipeline  --- xgboost ---
+2026-05-17 11:30:11  INFO      plbind.training.pipeline  xgboost split: 10602 train / 1381 test  (pos_rate_train=0.861)
+2026-05-17 11:30:11  INFO      plbind.models.base  Training XGBoost...
+2026-05-17 11:30:21  INFO      plbind.models.xgboost_model  XGBoost best iteration: 299
+2026-05-17 11:30:21  INFO      plbind.models.base  XGBoost trained in 10.17s
+2026-05-17 11:30:21  INFO      plbind.training.pipeline  xgboost → PR-AUC=0.9996  ROC-AUC=0.9963  F1=0.9947
+2026-05-17 11:30:21  INFO      plbind.models.base  Saved XGBoost → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/models/xgboost.pkl
+2026-05-17 11:30:21  INFO      plbind.evaluation.interpretability  Computing SHAP values (TreeExplainer) for 200 samples...
+2026-05-17 11:30:22  INFO      plbind.evaluation.interpretability  SHAP summary saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/figures/shap_xgboost.png
+2026-05-17 11:30:22  INFO      plbind.training.pipeline  SHAP done for xgboost — group importance: {'ligand': 0.8010658025741577, 'protein': 0.19882255792617798, 'aux': 0.00011140376591356471}
+2026-05-17 11:30:22  INFO      plbind.training.pipeline  --- lightgbm ---
+2026-05-17 11:30:22  INFO      plbind.training.pipeline  lightgbm split: 10602 train / 1381 test  (pos_rate_train=0.861)
+2026-05-17 11:30:22  INFO      plbind.models.base  Training LightGBM...
+2026-05-17 11:30:28  INFO      plbind.models.lightgbm_model  LightGBM best iteration: 130
+2026-05-17 11:30:28  INFO      plbind.models.base  LightGBM trained in 6.28s
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+2026-05-17 11:30:28  INFO      plbind.training.pipeline  lightgbm → PR-AUC=0.9997  ROC-AUC=0.9972  F1=0.9911
+2026-05-17 11:30:28  INFO      plbind.models.base  Saved LightGBM → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/models/lightgbm.pkl
+2026-05-17 11:30:28  INFO      plbind.evaluation.interpretability  Computing SHAP values (TreeExplainer) for 200 samples...
+2026-05-17 11:30:29  INFO      plbind.evaluation.interpretability  SHAP summary saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/figures/shap_lightgbm.png
+2026-05-17 11:30:29  INFO      plbind.training.pipeline  SHAP done for lightgbm — group importance: {'ligand': 0.8875155185575772, 'protein': 0.11230298690349773, 'aux': 0.00018149453892450944}
+2026-05-17 11:30:29  INFO      plbind.training.pipeline  CV: logistic_regression ...
+2026-05-17 11:30:29  INFO      plbind.evaluation.evaluator  CV: StratifiedGroupKFold (n_splits=5) — protein-aware, no leakage.
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: divide by zero encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: overflow encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: invalid value encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: divide by zero encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: overflow encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: invalid value encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: divide by zero encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: overflow encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: divide by zero encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: overflow encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: invalid value encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: divide by zero encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: overflow encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: invalid value encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: divide by zero encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: overflow encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: divide by zero encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: overflow encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: invalid value encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: divide by zero encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: overflow encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: invalid value encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: divide by zero encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: overflow encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: divide by zero encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: overflow encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: invalid value encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: divide by zero encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: overflow encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: invalid value encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: divide by zero encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: overflow encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: divide by zero encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: overflow encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:200: RuntimeWarning: invalid value encountered in matmul
+  raw_prediction = X @ weights + intercept
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: divide by zero encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: overflow encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:209: RuntimeWarning: invalid value encountered in matmul
+  norm2_w = weights @ weights if weights.ndim == 1 else squared_norm(weights)
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: divide by zero encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: overflow encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/linear_model/_linear_loss.py:330: RuntimeWarning: invalid value encountered in matmul
+  grad[:n_features] = X.T @ grad_pointwise + l2_reg_strength * weights
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+2026-05-17 11:30:37  INFO      plbind.evaluation.evaluator  CV f1_macro: 0.9416 ± 0.0256
+2026-05-17 11:30:37  INFO      plbind.evaluation.evaluator  CV roc_auc: 0.9920 ± 0.0018
+2026-05-17 11:30:37  INFO      plbind.evaluation.evaluator  CV average_precision: 0.9983 ± 0.0007
+2026-05-17 11:30:37  INFO      plbind.training.pipeline  CV logistic_regression → ROC-AUC=0.9920 ± 0.0018  PR-AUC=0.9983 ± 0.0007
+2026-05-17 11:30:37  INFO      plbind.training.pipeline  CV: random_forest ...
+2026-05-17 11:30:37  INFO      plbind.evaluation.evaluator  CV: StratifiedGroupKFold (n_splits=5) — protein-aware, no leakage.
+2026-05-17 11:30:46  INFO      plbind.evaluation.evaluator  CV f1_macro: 0.9747 ± 0.0104
+2026-05-17 11:30:46  INFO      plbind.evaluation.evaluator  CV roc_auc: 0.9954 ± 0.0031
+2026-05-17 11:30:46  INFO      plbind.evaluation.evaluator  CV average_precision: 0.9988 ± 0.0012
+2026-05-17 11:30:46  INFO      plbind.training.pipeline  CV random_forest → ROC-AUC=0.9954 ± 0.0031  PR-AUC=0.9988 ± 0.0012
+2026-05-17 11:30:46  INFO      plbind.training.pipeline  CV: xgboost ...
+2026-05-17 11:30:46  INFO      plbind.evaluation.evaluator  CV: StratifiedGroupKFold (n_splits=5) — protein-aware, no leakage.
+2026-05-17 11:31:43  INFO      plbind.evaluation.evaluator  CV f1_macro: 0.9791 ± 0.0129
+2026-05-17 11:31:43  INFO      plbind.evaluation.evaluator  CV roc_auc: 0.9952 ± 0.0027
+2026-05-17 11:31:43  INFO      plbind.evaluation.evaluator  CV average_precision: 0.9989 ± 0.0008
+2026-05-17 11:31:43  INFO      plbind.training.pipeline  CV xgboost → ROC-AUC=0.9952 ± 0.0027  PR-AUC=0.9989 ± 0.0008
+2026-05-17 11:31:43  INFO      plbind.training.pipeline  CV: lightgbm ...
+2026-05-17 11:31:43  INFO      plbind.evaluation.evaluator  CV: StratifiedGroupKFold (n_splits=5) — protein-aware, no leakage.
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+2026-05-17 11:32:48  INFO      plbind.evaluation.evaluator  CV f1_macro: 0.9768 ± 0.0117
+2026-05-17 11:32:48  INFO      plbind.evaluation.evaluator  CV roc_auc: 0.9955 ± 0.0029
+2026-05-17 11:32:48  INFO      plbind.evaluation.evaluator  CV average_precision: 0.9990 ± 0.0008
+2026-05-17 11:32:48  INFO      plbind.training.pipeline  CV lightgbm → ROC-AUC=0.9955 ± 0.0029  PR-AUC=0.9990 ± 0.0008
+2026-05-17 11:32:48  INFO      plbind.training.pipeline  --- InteractionMLP ---
+2026-05-17 11:32:48  INFO      plbind.models.mlp  InteractionMLP data set: 166 train batches, 9 val batches, 1381 test rows.
+2026-05-17 11:32:48  INFO      plbind.models.base  Training InteractionMLP...
+2026-05-17 11:32:49  INFO      plbind.models.mlp  Epoch   1/100  train_loss=0.0123  val_loss=0.0052  patience=0  lr=1.00e-03
+2026-05-17 11:32:50  INFO      plbind.models.mlp  Epoch   2/100  train_loss=0.0039  val_loss=0.0050  patience=0  lr=1.00e-03
+2026-05-17 11:32:51  INFO      plbind.models.mlp  Epoch   3/100  train_loss=0.0012  val_loss=0.0037  patience=0  lr=1.00e-03
+2026-05-17 11:32:52  INFO      plbind.models.mlp  Epoch   4/100  train_loss=0.0013  val_loss=0.0044  patience=1  lr=1.00e-03
+2026-05-17 11:32:53  INFO      plbind.models.mlp  Epoch   5/100  train_loss=0.0019  val_loss=0.0069  patience=2  lr=1.00e-03
+2026-05-17 11:32:53  INFO      plbind.models.mlp  Epoch   6/100  train_loss=0.0008  val_loss=0.0044  patience=3  lr=1.00e-03
+2026-05-17 11:32:54  INFO      plbind.models.mlp  Epoch   7/100  train_loss=0.0006  val_loss=0.0206  patience=4  lr=5.00e-04
+2026-05-17 11:32:55  INFO      plbind.models.mlp  Epoch   8/100  train_loss=0.0004  val_loss=0.0045  patience=5  lr=5.00e-04
+2026-05-17 11:32:56  INFO      plbind.models.mlp  Epoch   9/100  train_loss=0.0004  val_loss=0.0045  patience=6  lr=5.00e-04
+2026-05-17 11:32:57  INFO      plbind.models.mlp  Epoch  10/100  train_loss=0.0001  val_loss=0.0041  patience=7  lr=5.00e-04
+2026-05-17 11:32:57  INFO      plbind.models.mlp  Epoch  11/100  train_loss=0.0001  val_loss=0.0046  patience=8  lr=2.50e-04
+2026-05-17 11:32:58  INFO      plbind.models.mlp  Epoch  12/100  train_loss=0.0002  val_loss=0.0047  patience=9  lr=2.50e-04
+2026-05-17 11:32:59  INFO      plbind.models.mlp  Epoch  13/100  train_loss=0.0001  val_loss=0.0046  patience=10  lr=2.50e-04
+2026-05-17 11:33:00  INFO      plbind.models.mlp  Epoch  14/100  train_loss=0.0000  val_loss=0.0046  patience=11  lr=2.50e-04
+2026-05-17 11:33:01  INFO      plbind.models.mlp  Epoch  15/100  train_loss=0.0001  val_loss=0.0045  patience=12  lr=1.25e-04
+2026-05-17 11:33:01  INFO      plbind.models.mlp  Epoch  16/100  train_loss=0.0001  val_loss=0.0067  patience=13  lr=1.25e-04
+2026-05-17 11:33:02  INFO      plbind.models.mlp  Epoch  17/100  train_loss=0.0001  val_loss=0.0051  patience=14  lr=1.25e-04
+2026-05-17 11:33:03  INFO      plbind.models.mlp  Epoch  18/100  train_loss=0.0000  val_loss=0.0051  patience=15  lr=1.25e-04
+2026-05-17 11:33:03  INFO      plbind.models.mlp  Early stopping at epoch 18 (best val_loss=0.0037).
+2026-05-17 11:33:03  INFO      plbind.models.base  InteractionMLP trained in 14.91s
+2026-05-17 11:33:03  INFO      plbind.training.pipeline  InteractionMLP → PR-AUC=0.9998  ROC-AUC=0.9983
+2026-05-17 11:33:03  INFO      plbind.models.mlp  InteractionMLP saved → interaction_mlp (.pt + .pkl)
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Evaluating logistic_regression on cold_both split...
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: divide by zero encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: overflow encountered in matmul
+  ret = a @ b
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/extmath.py:203: RuntimeWarning: invalid value encountered in matmul
+  ret = a @ b
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_logistic_regression_cold_both.csv (1381 rows)
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Evaluating random_forest on cold_both split...
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_random_forest_cold_both.csv (1381 rows)
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Evaluating xgboost on cold_both split...
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_xgboost_cold_both.csv (1381 rows)
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Evaluating lightgbm on cold_both split...
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+/Users/anatoly.buchin/code/ML_protein_ligand_prediction/.venv/lib/python3.9/site-packages/sklearn/utils/validation.py:2739: UserWarning: X does not have valid feature names, but LGBMClassifier was fitted with feature names
+  warnings.warn(
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_lightgbm_cold_both.csv (1381 rows)
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Evaluating interaction_mlp on cold_both split...
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_interaction_mlp_cold_both.csv (1381 rows)
+2026-05-17 11:33:03  INFO      plbind.evaluation.cold_start  Cold-start summary saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/cold_start_summary.csv
+2026-05-17 11:33:03  INFO      plbind.training.pipeline  
+                     accuracy  f1_binary  f1_macro  precision_binary  recall_binary   roc_auc    pr_auc
+model                                                                                                  
+logistic_regression  0.948588   0.970527  0.884697          0.997440       0.945028  0.993684  0.999264
+random_forest        0.985518   0.991922  0.960996          0.991122       0.992724  0.997086  0.999670
+xgboost              0.990587   0.994739  0.975033          0.995948       0.993533  0.996334  0.999600
+lightgbm             0.984070   0.991057  0.959105          0.996729       0.985449  0.997199  0.999683
+interaction_mlp      0.966691   0.981054  0.921665          1.000000       0.962813  0.998321  0.999810
+2026-05-17 11:33:03  INFO      plbind.evaluation.evaluator  Evaluation results saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/results.json
+2026-05-17 11:33:03  INFO      plbind.training.pipeline  === Training Pipeline DONE ===
+2026-05-17 11:33:03  INFO      __main__  === Training Pipeline DONE ===
+
+=== Model Comparison ===
+                       pr_auc   roc_auc  f1_binary  accuracy
+model                                                       
+logistic_regression  0.999264  0.993684   0.970527  0.948588
+random_forest        0.999670  0.997086   0.991922  0.985518
+xgboost              0.999600  0.996334   0.994739  0.990587
+lightgbm             0.999683  0.997199   0.991057  0.984070
+interaction_mlp      0.999810  0.998321   0.981054  0.966691
