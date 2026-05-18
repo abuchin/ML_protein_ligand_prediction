@@ -2541,3 +2541,268 @@ interaction_mlp      0.966691   0.981054  0.921665          1.000000       0.962
 2026-05-17 11:33:03  INFO      plbind.evaluation.evaluator  Evaluation results saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/results.json
 2026-05-17 11:33:03  INFO      plbind.training.pipeline  === Training Pipeline DONE ===
 2026-05-17 11:33:03  INFO      __main__  === Training Pipeline DONE ===
+2026-05-18 00:11:59  INFO      __main__  === Data Preparation START ===
+2026-05-18 00:11:59  INFO      __main__  KIBA threshold: 12.1  (binder_is_below=True)
+2026-05-18 00:11:59  INFO      __main__  Loaded SMILES map: 280773 entries
+2026-05-18 00:11:59  INFO      plbind.data.preprocessor  Loaded 1134638 rows from /Users/anatoly.buchin/code/ML_protein_ligand_prediction/Data/raw/Drug_Discovery_dataset.csv
+2026-05-18 00:11:59  INFO      plbind.data.preprocessor  kiba_score_estimated counts:
+kiba_score_estimated
+True     1076648
+False      30465
+2026-05-18 00:11:59  INFO      plbind.data.preprocessor  KIBA score stats by estimated flag:
+                          count          mean           std           min   25%    50%     75%          max
+kiba_score_estimated                                                                                       
+False                   30465.0   9783.334640  1.003023e+05  1.000000e-05   7.5   77.0  1170.0    7150000.0
+True                  1076648.0  25396.847349  1.360989e+06  9.280000e-07  16.7  180.0  2050.0  868000000.0
+2026-05-18 00:12:00  INFO      plbind.data.preprocessor  Duplicates collapsed: 1095027 → 1071302 rows
+2026-05-18 00:12:00  INFO      plbind.data.preprocessor  Labels: threshold=12.10, binder_is_below=True → positive rate=0.223
+2026-05-18 00:12:00  INFO      plbind.data.preprocessor  Positive pairs after labeling: 238972
+2026-05-18 00:12:00  INFO      plbind.data.preprocessor  Real non-binders available: 832330 (ratio 3.48)
+2026-05-18 00:12:00  INFO      plbind.data.preprocessor  Using 238972 real non-binders (subsampled from 832330)
+2026-05-18 00:12:00  INFO      plbind.data.preprocessor  Negative pairs total: 238972  (ratio 1.00)
+2026-05-18 00:12:00  INFO      plbind.data.preprocessor  Combined dataset: 477944 rows  (positive rate 0.500)
+2026-05-18 00:12:00  INFO      __main__  Saved combined_data.csv (477944 rows)
+2026-05-18 00:12:00  INFO      __main__  Fetching SMILES for 142206 new CIDs from PubChem...
+2026-05-18 00:12:17  INFO      __main__    ... 4200 / 142206 CIDs fetched so far
+2026-05-18 00:12:34  INFO      __main__    ... 8200 / 142206 CIDs fetched so far
+2026-05-18 00:12:50  INFO      __main__    ... 12200 / 142206 CIDs fetched so far
+2026-05-18 00:13:06  INFO      __main__    ... 16200 / 142206 CIDs fetched so far
+2026-05-18 00:13:23  INFO      __main__    ... 20200 / 142206 CIDs fetched so far
+2026-05-18 00:13:39  INFO      __main__    ... 24200 / 142206 CIDs fetched so far
+2026-05-18 00:13:56  INFO      __main__    ... 28200 / 142206 CIDs fetched so far
+2026-05-18 00:14:12  INFO      __main__    ... 32200 / 142206 CIDs fetched so far
+2026-05-18 00:14:29  INFO      __main__    ... 36200 / 142206 CIDs fetched so far
+2026-05-18 00:14:46  INFO      __main__    ... 40200 / 142206 CIDs fetched so far
+2026-05-18 00:15:03  INFO      __main__    ... 44200 / 142206 CIDs fetched so far
+2026-05-18 00:15:18  INFO      __main__    ... 48200 / 142206 CIDs fetched so far
+2026-05-18 00:15:34  INFO      __main__    ... 52200 / 142206 CIDs fetched so far
+2026-05-18 00:15:50  INFO      __main__    ... 56200 / 142206 CIDs fetched so far
+2026-05-18 00:16:06  INFO      __main__    ... 60200 / 142206 CIDs fetched so far
+2026-05-18 00:16:22  INFO      __main__    ... 64200 / 142206 CIDs fetched so far
+2026-05-18 00:16:38  INFO      __main__    ... 68200 / 142206 CIDs fetched so far
+2026-05-18 00:16:54  INFO      __main__    ... 72200 / 142206 CIDs fetched so far
+2026-05-18 00:17:11  INFO      __main__    ... 76200 / 142206 CIDs fetched so far
+2026-05-18 00:17:28  INFO      __main__    ... 80200 / 142206 CIDs fetched so far
+2026-05-18 00:17:43  INFO      __main__    ... 84200 / 142206 CIDs fetched so far
+2026-05-18 00:17:59  INFO      __main__    ... 88200 / 142206 CIDs fetched so far
+2026-05-18 00:18:15  INFO      __main__    ... 92200 / 142206 CIDs fetched so far
+2026-05-18 00:18:32  INFO      __main__    ... 96200 / 142206 CIDs fetched so far
+2026-05-18 00:18:48  INFO      __main__    ... 100200 / 142206 CIDs fetched so far
+2026-05-18 00:19:04  INFO      __main__    ... 104200 / 142206 CIDs fetched so far
+2026-05-18 00:19:23  INFO      __main__    ... 108200 / 142206 CIDs fetched so far
+2026-05-18 00:19:39  INFO      __main__    ... 112200 / 142206 CIDs fetched so far
+2026-05-18 00:19:56  INFO      __main__    ... 116200 / 142206 CIDs fetched so far
+2026-05-18 00:20:13  INFO      __main__    ... 120200 / 142206 CIDs fetched so far
+2026-05-18 00:20:30  INFO      __main__    ... 124200 / 142206 CIDs fetched so far
+2026-05-18 00:20:47  INFO      __main__    ... 128200 / 142206 CIDs fetched so far
+2026-05-18 00:21:03  INFO      __main__    ... 132200 / 142206 CIDs fetched so far
+2026-05-18 00:21:19  INFO      __main__    ... 136200 / 142206 CIDs fetched so far
+2026-05-18 00:21:35  INFO      __main__    ... 140200 / 142206 CIDs fetched so far
+2026-05-18 00:21:44  INFO      __main__  SMILES fetch complete: 142206 fetched, 0 failed.
+2026-05-18 00:21:44  INFO      __main__  Updated SMILES cache saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/Data/processed/cid_to_smiles.pkl (422979 total entries)
+2026-05-18 00:21:44  INFO      __main__  Fetching data for 3847 unique proteins...
+2026-05-18 00:40:42  INFO      __main__  Sequences fetched: 3847 / 3847
+2026-05-18 00:40:42  INFO      plbind.data.protein_fetcher  Fetching metadata for 3847 proteins (fit_vocab=True)...
+2026-05-18 00:40:42  INFO      plbind.data.protein_fetcher    Fetched 50 / 3847
+2026-05-18 00:40:44  INFO      plbind.data.protein_fetcher    Fetched 100 / 3847
+2026-05-18 00:40:46  INFO      plbind.data.protein_fetcher    Fetched 150 / 3847
+2026-05-18 00:40:49  INFO      plbind.data.protein_fetcher    Fetched 200 / 3847
+2026-05-18 00:40:51  INFO      plbind.data.protein_fetcher    Fetched 250 / 3847
+2026-05-18 00:40:55  INFO      plbind.data.protein_fetcher    Fetched 300 / 3847
+2026-05-18 00:40:55  INFO      plbind.data.protein_fetcher    Fetched 350 / 3847
+2026-05-18 00:40:58  INFO      plbind.data.protein_fetcher    Fetched 400 / 3847
+2026-05-18 00:41:03  INFO      plbind.data.protein_fetcher    Fetched 450 / 3847
+2026-05-18 00:41:08  INFO      plbind.data.protein_fetcher    Fetched 500 / 3847
+2026-05-18 00:41:12  INFO      plbind.data.protein_fetcher    Fetched 550 / 3847
+2026-05-18 00:41:16  INFO      plbind.data.protein_fetcher    Fetched 600 / 3847
+2026-05-18 00:41:22  INFO      plbind.data.protein_fetcher    Fetched 650 / 3847
+2026-05-18 00:41:27  INFO      plbind.data.protein_fetcher    Fetched 700 / 3847
+2026-05-18 00:41:32  INFO      plbind.data.protein_fetcher    Fetched 750 / 3847
+2026-05-18 00:41:39  INFO      plbind.data.protein_fetcher    Fetched 800 / 3847
+2026-05-18 00:41:47  INFO      plbind.data.protein_fetcher    Fetched 850 / 3847
+2026-05-18 00:41:51  INFO      plbind.data.protein_fetcher    Fetched 900 / 3847
+2026-05-18 00:42:00  INFO      plbind.data.protein_fetcher    Fetched 950 / 3847
+2026-05-18 00:42:08  INFO      plbind.data.protein_fetcher    Fetched 1000 / 3847
+2026-05-18 00:42:23  INFO      plbind.data.protein_fetcher    Fetched 1050 / 3847
+2026-05-18 00:42:31  INFO      plbind.data.protein_fetcher    Fetched 1100 / 3847
+2026-05-18 00:42:43  INFO      plbind.data.protein_fetcher    Fetched 1150 / 3847
+2026-05-18 00:42:53  INFO      plbind.data.protein_fetcher    Fetched 1200 / 3847
+2026-05-18 00:43:05  INFO      plbind.data.protein_fetcher    Fetched 1250 / 3847
+2026-05-18 00:43:18  INFO      plbind.data.protein_fetcher    Fetched 1300 / 3847
+2026-05-18 00:43:29  INFO      plbind.data.protein_fetcher    Fetched 1350 / 3847
+2026-05-18 00:43:40  INFO      plbind.data.protein_fetcher    Fetched 1400 / 3847
+2026-05-18 00:43:53  INFO      plbind.data.protein_fetcher    Fetched 1450 / 3847
+2026-05-18 00:44:01  INFO      plbind.data.protein_fetcher    Fetched 1500 / 3847
+2026-05-18 00:44:13  INFO      plbind.data.protein_fetcher    Fetched 1550 / 3847
+2026-05-18 00:44:24  INFO      plbind.data.protein_fetcher    Fetched 1600 / 3847
+2026-05-18 00:44:39  INFO      plbind.data.protein_fetcher    Fetched 1650 / 3847
+2026-05-18 00:44:55  INFO      plbind.data.protein_fetcher    Fetched 1700 / 3847
+2026-05-18 00:45:10  INFO      plbind.data.protein_fetcher    Fetched 1750 / 3847
+2026-05-18 00:45:26  INFO      plbind.data.protein_fetcher    Fetched 1800 / 3847
+2026-05-18 00:45:43  INFO      plbind.data.protein_fetcher    Fetched 1850 / 3847
+2026-05-18 00:46:02  INFO      plbind.data.protein_fetcher    Fetched 1900 / 3847
+2026-05-18 00:46:19  INFO      plbind.data.protein_fetcher    Fetched 1950 / 3847
+2026-05-18 00:46:37  INFO      plbind.data.protein_fetcher    Fetched 2000 / 3847
+2026-05-18 00:46:54  INFO      plbind.data.protein_fetcher    Fetched 2050 / 3847
+2026-05-18 00:47:10  INFO      plbind.data.protein_fetcher    Fetched 2100 / 3847
+2026-05-18 00:47:28  INFO      plbind.data.protein_fetcher    Fetched 2150 / 3847
+2026-05-18 00:47:46  INFO      plbind.data.protein_fetcher    Fetched 2200 / 3847
+2026-05-18 00:48:04  INFO      plbind.data.protein_fetcher    Fetched 2250 / 3847
+2026-05-18 00:48:22  INFO      plbind.data.protein_fetcher    Fetched 2300 / 3847
+2026-05-18 00:48:44  INFO      plbind.data.protein_fetcher    Fetched 2350 / 3847
+2026-05-18 00:49:04  INFO      plbind.data.protein_fetcher    Fetched 2400 / 3847
+2026-05-18 00:49:24  INFO      plbind.data.protein_fetcher    Fetched 2450 / 3847
+2026-05-18 00:49:45  INFO      plbind.data.protein_fetcher    Fetched 2500 / 3847
+2026-05-18 00:50:04  INFO      plbind.data.protein_fetcher    Fetched 2550 / 3847
+2026-05-18 00:50:27  INFO      plbind.data.protein_fetcher    Fetched 2600 / 3847
+2026-05-18 00:50:44  INFO      plbind.data.protein_fetcher    Fetched 2650 / 3847
+2026-05-18 00:51:04  INFO      plbind.data.protein_fetcher    Fetched 2700 / 3847
+2026-05-18 00:51:31  INFO      plbind.data.protein_fetcher    Fetched 2750 / 3847
+2026-05-18 00:51:58  INFO      plbind.data.protein_fetcher    Fetched 2800 / 3847
+2026-05-18 00:52:26  INFO      plbind.data.protein_fetcher    Fetched 2850 / 3847
+2026-05-18 00:52:50  INFO      plbind.data.protein_fetcher    Fetched 2900 / 3847
+2026-05-18 00:53:21  INFO      plbind.data.protein_fetcher    Fetched 2950 / 3847
+2026-05-18 00:53:47  INFO      plbind.data.protein_fetcher    Fetched 3000 / 3847
+2026-05-18 00:54:13  INFO      plbind.data.protein_fetcher    Fetched 3050 / 3847
+2026-05-18 00:54:41  INFO      plbind.data.protein_fetcher    Fetched 3100 / 3847
+2026-05-18 00:55:09  INFO      plbind.data.protein_fetcher    Fetched 3150 / 3847
+2026-05-18 00:55:34  INFO      plbind.data.protein_fetcher    Fetched 3200 / 3847
+2026-05-18 00:56:02  INFO      plbind.data.protein_fetcher    Fetched 3250 / 3847
+2026-05-18 00:56:27  INFO      plbind.data.protein_fetcher    Fetched 3300 / 3847
+2026-05-18 00:56:59  INFO      plbind.data.protein_fetcher    Fetched 3350 / 3847
+2026-05-18 00:57:30  INFO      plbind.data.protein_fetcher    Fetched 3400 / 3847
+2026-05-18 00:57:59  INFO      plbind.data.protein_fetcher    Fetched 3450 / 3847
+2026-05-18 00:58:26  INFO      plbind.data.protein_fetcher    Fetched 3500 / 3847
+2026-05-18 00:58:58  INFO      plbind.data.protein_fetcher    Fetched 3550 / 3847
+2026-05-18 00:59:31  INFO      plbind.data.protein_fetcher    Fetched 3600 / 3847
+2026-05-18 01:00:00  INFO      plbind.data.protein_fetcher    Fetched 3650 / 3847
+2026-05-18 01:00:28  INFO      plbind.data.protein_fetcher    Fetched 3700 / 3847
+2026-05-18 01:00:53  INFO      plbind.data.protein_fetcher    Fetched 3750 / 3847
+2026-05-18 01:01:25  INFO      plbind.data.protein_fetcher    Fetched 3800 / 3847
+2026-05-18 01:02:00  INFO      plbind.data.protein_fetcher  Auxiliary features: 3847 proteins × 94 features
+2026-05-18 01:02:00  INFO      __main__  Auxiliary features saved.
+2026-05-18 01:02:00  INFO      plbind.data.protein_encoder  ESM2Encoder: model=facebook/esm2_t12_35M_UR50D  device=mps  pooling=mean_max
+2026-05-18 01:02:00  INFO      plbind.data.protein_encoder  Computing ESM-2 embeddings for 1576 proteins (cache misses)...
+2026-05-18 01:02:01  INFO      plbind.data.protein_encoder  Loading ESM-2 model: facebook/esm2_t12_35M_UR50D (this may take a moment)...
+2026-05-18 01:02:02  INFO      plbind.data.protein_encoder  ESM-2 loaded on mps. Output dim: 960
+2026-05-18 01:03:17  INFO      __main__  Protein embeddings saved: 3847 proteins, dim=960
+2026-05-18 01:03:17  INFO      plbind.data.ligand_encoder  Encoding 367076 ligands...
+2026-05-18 01:07:01  INFO      __main__  Ligand features saved: 367076 CIDs
+2026-05-18 01:07:01  INFO      __main__  === Data Preparation DONE ===
+2026-05-18 07:21:22  INFO      __main__  === Training Pipeline START ===
+2026-05-18 07:21:22  INFO      __main__  Split: cold_both | tune: False | n_samples: None
+2026-05-18 07:21:23  INFO      __main__  Loaded 477944 rows, 3847 proteins, 367076 ligands.
+2026-05-18 07:21:37  INFO      __main__  Feature matrix: (477944, 3283)  (protein=960, ligand=2229, aux=94)
+2026-05-18 07:21:37  INFO      plbind.training.pipeline  === Training Pipeline START ===
+2026-05-18 07:21:37  INFO      plbind.training.pipeline  Split strategy: cold_both | tune: False | n_samples: None
+2026-05-18 07:21:37  INFO      plbind.training.splitter  cold_both: test set 69468 rows (dropped 36410 with seen CIDs), pos_rate=0.482
+2026-05-18 07:21:37  INFO      plbind.training.splitter  Split [cold_both]: train: 323250 rows, pos_rate=0.486 | val: 48816 rows, pos_rate=0.578 | test: 69468 rows, pos_rate=0.482
+2026-05-18 07:21:37  INFO      plbind.training.splitter  Protein leakage check: OK (no shared proteins in train/test)
+2026-05-18 07:21:38  INFO      plbind.training.pipeline  XGBoost scale_pos_weight set to 1.058 (neg=166195, pos=157055)
+2026-05-18 07:21:38  INFO      plbind.training.pipeline  --- logistic_regression ---
+2026-05-18 07:21:47  INFO      plbind.training.pipeline  logistic_regression split: 323250 train / 69468 test  (pos_rate_train=0.486)
+2026-05-18 07:21:47  INFO      plbind.models.base  Training Logistic Regression...
+2026-05-18 07:24:40  INFO      plbind.models.base  Logistic Regression trained in 173.61s
+2026-05-18 07:24:41  INFO      plbind.training.pipeline  logistic_regression → PR-AUC=0.5628  ROC-AUC=0.6061  F1=0.4888
+2026-05-18 07:24:41  INFO      plbind.models.base  Saved Logistic Regression → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/models/logistic_regression.pkl
+2026-05-18 07:24:41  WARNING   plbind.training.pipeline  SHAP failed for logistic_regression: Model type not yet supported by TreeExplainer: <class 'sklearn.linear_model._logistic.LogisticRegression'>
+2026-05-18 07:24:41  INFO      plbind.training.pipeline  --- random_forest ---
+2026-05-18 07:24:48  INFO      plbind.training.pipeline  random_forest split: 323250 train / 69468 test  (pos_rate_train=0.486)
+2026-05-18 07:24:48  INFO      plbind.models.base  Training Random Forest...
+2026-05-18 07:25:47  INFO      plbind.models.base  Random Forest trained in 58.78s
+2026-05-18 07:25:49  INFO      plbind.training.pipeline  random_forest → PR-AUC=0.6598  ROC-AUC=0.7007  F1=0.1678
+2026-05-18 07:25:49  INFO      plbind.models.base  Saved Random Forest → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/models/random_forest.pkl
+2026-05-18 07:25:49  INFO      plbind.evaluation.interpretability  Computing SHAP values (TreeExplainer) for 200 samples...
+2026-05-18 08:21:32  WARNING   plbind.training.pipeline  SHAP failed for random_forest: Additivity check failed in TreeExplainer! Please ensure the data matrix you passed to the explainer is the same shape that the model was trained on. If your data shape is correct then please report this on GitHub. Consider retrying with the feature_perturbation='interventional' option. This check failed because for one of the samples the sum of the SHAP values was 0.680023, while the model output was 0.652429. If this difference is acceptable you can set check_additivity=False to disable this check.
+2026-05-18 08:21:32  INFO      plbind.training.pipeline  --- xgboost ---
+2026-05-18 08:21:42  INFO      plbind.training.pipeline  xgboost split: 323250 train / 69468 test  (pos_rate_train=0.486)
+2026-05-18 08:21:42  INFO      plbind.models.base  Training XGBoost...
+2026-05-18 08:24:23  INFO      plbind.models.xgboost_model  XGBoost best iteration: 299
+2026-05-18 08:24:23  INFO      plbind.models.base  XGBoost trained in 161.07s
+2026-05-18 08:24:23  INFO      plbind.training.pipeline  xgboost → PR-AUC=0.6639  ROC-AUC=0.7137  F1=0.4897
+2026-05-18 08:24:23  INFO      plbind.models.base  Saved XGBoost → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/models/xgboost.pkl
+2026-05-18 08:24:23  INFO      plbind.evaluation.interpretability  Computing SHAP values (TreeExplainer) for 200 samples...
+2026-05-18 08:24:24  INFO      plbind.evaluation.interpretability  SHAP summary saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/figures/shap_xgboost.png
+2026-05-18 08:24:24  INFO      plbind.training.pipeline  SHAP done for xgboost — group importance: {'protein': 0.5367026925086975, 'ligand': 0.4589518904685974, 'aux': 0.0043452731333673}
+2026-05-18 08:24:24  INFO      plbind.training.pipeline  --- lightgbm ---
+2026-05-18 08:24:32  INFO      plbind.training.pipeline  lightgbm split: 323250 train / 69468 test  (pos_rate_train=0.486)
+2026-05-18 08:24:32  INFO      plbind.models.base  Training LightGBM...
+2026-05-18 08:26:10  INFO      plbind.models.lightgbm_model  LightGBM best iteration: 500
+2026-05-18 08:26:10  INFO      plbind.models.base  LightGBM trained in 97.84s
+2026-05-18 08:26:11  INFO      plbind.training.pipeline  lightgbm → PR-AUC=0.6757  ROC-AUC=0.7151  F1=0.4120
+2026-05-18 08:26:11  INFO      plbind.models.base  Saved LightGBM → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/models/lightgbm.pkl
+2026-05-18 08:26:11  INFO      plbind.evaluation.interpretability  Computing SHAP values (TreeExplainer) for 200 samples...
+2026-05-18 08:26:11  INFO      plbind.evaluation.interpretability  SHAP summary saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/figures/shap_lightgbm.png
+2026-05-18 08:26:11  INFO      plbind.training.pipeline  SHAP done for lightgbm — group importance: {'protein': 0.5100639043499325, 'ligand': 0.48410106924988416, 'aux': 0.0058350264001836025}
+2026-05-18 08:26:11  INFO      plbind.training.pipeline  CV: logistic_regression ...
+2026-05-18 08:26:11  INFO      plbind.evaluation.evaluator  CV: StratifiedGroupKFold (n_splits=5) — protein-aware.
+2026-05-18 08:43:31  INFO      plbind.evaluation.evaluator  CV f1_macro: 0.5907 ± 0.0254
+2026-05-18 08:43:31  INFO      plbind.evaluation.evaluator  CV roc_auc: 0.6284 ± 0.0279
+2026-05-18 08:43:31  INFO      plbind.evaluation.evaluator  CV average_precision: 0.5873 ± 0.0214
+2026-05-18 08:43:31  INFO      plbind.training.pipeline  CV logistic_regression → ROC-AUC=0.6284 ± 0.0279  PR-AUC=0.5873 ± 0.0214
+2026-05-18 08:43:31  INFO      plbind.training.pipeline  CV: random_forest ...
+2026-05-18 08:43:31  INFO      plbind.evaluation.evaluator  CV: StratifiedGroupKFold (n_splits=5) — protein-aware.
+2026-05-18 08:51:12  INFO      plbind.evaluation.evaluator  CV f1_macro: 0.4404 ± 0.0178
+2026-05-18 08:51:12  INFO      plbind.evaluation.evaluator  CV roc_auc: 0.6972 ± 0.0041
+2026-05-18 08:51:12  INFO      plbind.evaluation.evaluator  CV average_precision: 0.6513 ± 0.0149
+2026-05-18 08:51:13  INFO      plbind.training.pipeline  CV random_forest → ROC-AUC=0.6972 ± 0.0041  PR-AUC=0.6513 ± 0.0149
+2026-05-18 08:51:13  INFO      plbind.training.pipeline  CV: xgboost ...
+2026-05-18 08:51:13  INFO      plbind.evaluation.evaluator  CV: StratifiedGroupKFold (n_splits=5) — protein-aware.
+2026-05-18 10:01:06  INFO      plbind.evaluation.evaluator  CV f1_macro: 0.5923 ± 0.0240
+2026-05-18 10:01:06  INFO      plbind.evaluation.evaluator  CV roc_auc: 0.7038 ± 0.0157
+2026-05-18 10:01:06  INFO      plbind.evaluation.evaluator  CV average_precision: 0.6561 ± 0.0184
+2026-05-18 10:01:06  INFO      plbind.training.pipeline  CV xgboost → ROC-AUC=0.7038 ± 0.0157  PR-AUC=0.6561 ± 0.0184
+2026-05-18 10:01:06  INFO      plbind.training.pipeline  CV: lightgbm ...
+2026-05-18 10:01:06  INFO      plbind.evaluation.evaluator  CV: StratifiedGroupKFold (n_splits=5) — protein-aware.
+2026-05-18 10:11:48  INFO      plbind.evaluation.evaluator  CV f1_macro: 0.5572 ± 0.0264
+2026-05-18 10:11:48  INFO      plbind.evaluation.evaluator  CV roc_auc: 0.7090 ± 0.0176
+2026-05-18 10:11:48  INFO      plbind.evaluation.evaluator  CV average_precision: 0.6631 ± 0.0193
+2026-05-18 10:11:48  INFO      plbind.training.pipeline  CV lightgbm → ROC-AUC=0.7090 ± 0.0176  PR-AUC=0.6631 ± 0.0193
+2026-05-18 10:11:49  INFO      plbind.training.pipeline  --- InteractionMLP ---
+2026-05-18 10:12:10  INFO      plbind.models.mlp  InteractionMLP data set: 5051 train batches, 382 val batches, 69468 test rows (pos_rate=0.486).
+2026-05-18 10:12:10  INFO      plbind.models.base  Training InteractionMLP...
+2026-05-18 10:12:11  INFO      plbind.models.mlp  FocalLoss: alpha=0.514 (pos_rate=0.486)
+2026-05-18 10:12:40  INFO      plbind.models.mlp  Epoch   1/100  train_loss=0.0620  val_loss=0.1048  patience=0  lr=1.00e-03
+2026-05-18 10:13:07  INFO      plbind.models.mlp  Epoch   2/100  train_loss=0.0514  val_loss=0.1066  patience=1  lr=1.00e-03
+2026-05-18 10:13:35  INFO      plbind.models.mlp  Epoch   3/100  train_loss=0.0471  val_loss=0.1036  patience=0  lr=1.00e-03
+2026-05-18 10:14:03  INFO      plbind.models.mlp  Epoch   4/100  train_loss=0.0446  val_loss=0.1294  patience=1  lr=1.00e-03
+2026-05-18 10:14:30  INFO      plbind.models.mlp  Epoch   5/100  train_loss=0.0427  val_loss=0.1141  patience=2  lr=1.00e-03
+2026-05-18 10:14:58  INFO      plbind.models.mlp  Epoch   6/100  train_loss=0.0415  val_loss=0.1386  patience=3  lr=1.00e-03
+2026-05-18 10:15:25  INFO      plbind.models.mlp  Epoch   7/100  train_loss=0.0405  val_loss=0.1164  patience=4  lr=5.00e-04
+2026-05-18 10:15:53  INFO      plbind.models.mlp  Epoch   8/100  train_loss=0.0338  val_loss=0.1598  patience=5  lr=5.00e-04
+2026-05-18 10:16:21  INFO      plbind.models.mlp  Epoch   9/100  train_loss=0.0311  val_loss=0.1957  patience=6  lr=5.00e-04
+2026-05-18 10:16:48  INFO      plbind.models.mlp  Epoch  10/100  train_loss=0.0301  val_loss=0.1850  patience=7  lr=5.00e-04
+2026-05-18 10:17:16  INFO      plbind.models.mlp  Epoch  11/100  train_loss=0.0291  val_loss=0.2002  patience=8  lr=2.50e-04
+2026-05-18 10:17:44  INFO      plbind.models.mlp  Epoch  12/100  train_loss=0.0233  val_loss=0.2415  patience=9  lr=2.50e-04
+2026-05-18 10:18:11  INFO      plbind.models.mlp  Epoch  13/100  train_loss=0.0215  val_loss=0.2930  patience=10  lr=2.50e-04
+2026-05-18 10:18:39  INFO      plbind.models.mlp  Epoch  14/100  train_loss=0.0204  val_loss=0.3242  patience=11  lr=2.50e-04
+2026-05-18 10:19:06  INFO      plbind.models.mlp  Epoch  15/100  train_loss=0.0195  val_loss=0.3136  patience=12  lr=1.25e-04
+2026-05-18 10:19:34  INFO      plbind.models.mlp  Epoch  16/100  train_loss=0.0157  val_loss=0.3988  patience=13  lr=1.25e-04
+2026-05-18 10:20:02  INFO      plbind.models.mlp  Epoch  17/100  train_loss=0.0145  val_loss=0.4105  patience=14  lr=1.25e-04
+2026-05-18 10:20:30  INFO      plbind.models.mlp  Epoch  18/100  train_loss=0.0137  val_loss=0.4293  patience=15  lr=1.25e-04
+2026-05-18 10:20:30  INFO      plbind.models.mlp  Early stopping at epoch 18 (best val_loss=0.1036).
+2026-05-18 10:20:30  INFO      plbind.models.base  InteractionMLP trained in 499.93s
+2026-05-18 10:20:31  INFO      plbind.training.pipeline  InteractionMLP → PR-AUC=0.6463  ROC-AUC=0.6897
+2026-05-18 10:20:32  INFO      plbind.models.mlp  InteractionMLP saved → interaction_mlp (.pt + .pkl)
+2026-05-18 10:20:32  INFO      plbind.evaluation.cold_start  Evaluating logistic_regression on cold_both split...
+2026-05-18 10:20:34  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_logistic_regression_cold_both.csv (69468 rows)
+2026-05-18 10:20:34  INFO      plbind.evaluation.cold_start  Evaluating random_forest on cold_both split...
+2026-05-18 10:20:38  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_random_forest_cold_both.csv (69468 rows)
+2026-05-18 10:20:38  INFO      plbind.evaluation.cold_start  Evaluating xgboost on cold_both split...
+2026-05-18 10:20:39  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_xgboost_cold_both.csv (69468 rows)
+2026-05-18 10:20:39  INFO      plbind.evaluation.cold_start  Evaluating lightgbm on cold_both split...
+2026-05-18 10:20:41  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_lightgbm_cold_both.csv (69468 rows)
+2026-05-18 10:20:41  INFO      plbind.evaluation.cold_start  Evaluating interaction_mlp on cold_both split...
+2026-05-18 10:20:42  INFO      plbind.evaluation.cold_start  Predictions saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/predictions_interaction_mlp_cold_both.csv (69468 rows)
+2026-05-18 10:20:42  INFO      plbind.evaluation.cold_start  Cold-start summary saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/predictions/cold_start_summary.csv
+2026-05-18 10:20:42  INFO      plbind.training.pipeline  
+                     accuracy  balanced_accuracy  f1_binary  f1_macro  precision_binary  recall_binary  test_pos_rate  majority_class_accuracy  majority_class_pr_auc   roc_auc    pr_auc
+model                                                                                                                                                                                    
+logistic_regression  0.576553           0.571086   0.488755  0.563685          0.584390       0.420020       0.481905                 0.518095               0.481905  0.606129  0.562770
+random_forest        0.550095           0.534170   0.167803  0.429759          0.772493       0.094124       0.481905                 0.518095               0.481905  0.700674  0.659806
+xgboost              0.622402           0.613793   0.489659  0.595002          0.702154       0.375900       0.481905                 0.518095               0.481905  0.713668  0.663910
+lightgbm             0.604451           0.593385   0.412034  0.557007          0.726258       0.287600       0.481905                 0.518095               0.481905  0.715057  0.675686
+interaction_mlp      0.623956           0.616904   0.519612  0.605336          0.675916       0.422021       0.481905                 0.518095               0.481905  0.689692  0.646314
+2026-05-18 10:20:42  INFO      plbind.evaluation.evaluator  Evaluation results saved → /Users/anatoly.buchin/code/ML_protein_ligand_prediction/outputs/results.json
+2026-05-18 10:20:42  INFO      plbind.training.pipeline  === Training Pipeline DONE ===
+2026-05-18 10:20:42  INFO      __main__  === Training Pipeline DONE ===
