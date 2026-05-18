@@ -23,47 +23,34 @@ def _make_data(n=200, d=20, seed=42):
 
 
 def _train_sklearn_model(model, X, y):
-    model.split_data(X, y)
+    from sklearn.model_selection import train_test_split
+    from sklearn.preprocessing import StandardScaler
+    X_arr = X.values if hasattr(X, "values") else np.asarray(X)
+    y_arr = y.values if hasattr(y, "values") else np.asarray(y)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_arr, y_arr, stratify=y_arr, test_size=0.2, random_state=42
+    )
+    scaler = StandardScaler()
+    model.scaler = scaler
+    model.X_train = scaler.fit_transform(X_train).astype(np.float32)
+    model.X_test = scaler.transform(X_test).astype(np.float32)
+    model.y_train = y_train.astype(np.int32)
+    model.y_test = y_test.astype(np.int32)
     model.train()
     model.predict()
     return model
 
 
 # ---------------------------------------------------------------------------
-# BaseModel.split_data (tested via concrete subclass)
+# BaseModel.split_data is deprecated — verify it raises RuntimeError
 # ---------------------------------------------------------------------------
 
-class TestSplitData:
-    def test_shapes_consistent(self, synthetic_data):
+class TestSplitDataDeprecated:
+    def test_raises_runtime_error(self, synthetic_data):
         X, y = synthetic_data
         m = LogisticRegressionModel()
-        m.split_data(X, y)
-        n_train = m.X_train.shape[0]
-        n_test = m.X_test.shape[0]
-        assert n_train + n_test == len(X)
-
-    def test_test_size_respected(self, synthetic_data):
-        X, y = synthetic_data
-        m = LogisticRegressionModel(test_size=0.25)
-        m.split_data(X, y)
-        expected_test = int(len(X) * 0.25)
-        assert abs(m.X_test.shape[0] - expected_test) <= 2
-
-    def test_scaler_fitted_on_train(self, synthetic_data):
-        X, y = synthetic_data
-        m = LogisticRegressionModel()
-        m.split_data(X, y)
-        assert m.scaler is not None
-        assert m.scaler.mean_.shape[0] == X.shape[1]
-
-    def test_stratification_preserves_ratio(self, synthetic_data):
-        X, y = synthetic_data
-        m = LogisticRegressionModel()
-        m.split_data(X, y)
-        train_ratio = m.y_train.mean()
-        test_ratio = m.y_test.mean()
-        assert abs(train_ratio - 0.5) < 0.1
-        assert abs(test_ratio - 0.5) < 0.1
+        with pytest.raises(RuntimeError, match="deprecated"):
+            m.split_data(X, y)
 
 
 # ---------------------------------------------------------------------------
@@ -73,31 +60,22 @@ class TestSplitData:
 class TestTrainPredict:
     def test_training_time_recorded(self, synthetic_data):
         X, y = synthetic_data
-        m = LogisticRegressionModel()
-        m.split_data(X, y)
-        m.train()
+        m = _train_sklearn_model(LogisticRegressionModel(), X, y)
         assert m.training_time is not None and m.training_time >= 0
 
     def test_prediction_time_recorded(self, synthetic_data):
         X, y = synthetic_data
-        m = LogisticRegressionModel()
-        m.split_data(X, y)
-        m.train()
-        m.predict()
+        m = _train_sklearn_model(LogisticRegressionModel(), X, y)
         assert m.prediction_time is not None and m.prediction_time >= 0
 
     def test_y_pred_shape(self, synthetic_data):
         X, y = synthetic_data
-        m = LogisticRegressionModel()
-        m.split_data(X, y)
-        m.train()
-        preds = m.predict()
-        assert len(preds) == m.X_test.shape[0]
+        m = _train_sklearn_model(LogisticRegressionModel(), X, y)
+        assert len(m.y_pred) == m.X_test.shape[0]
 
     def test_get_predictions_raises_before_train(self, synthetic_data):
         X, y = synthetic_data
         m = LogisticRegressionModel()
-        m.split_data(X, y)
         with pytest.raises(ValueError):
             m.get_predictions()
 
@@ -147,7 +125,7 @@ class TestLogisticRegressionModel:
     def test_tune_returns_best_params(self, synthetic_data):
         X, y = synthetic_data
         m = LogisticRegressionModel()
-        m.split_data(X, y)
+        _train_sklearn_model(m, X, y)
         best = m.tune(param_grid={"C": [0.1, 1.0], "penalty": ["l2"]}, cv=2)
         assert "C" in best
 

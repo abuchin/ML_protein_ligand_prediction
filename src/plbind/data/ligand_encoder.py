@@ -169,11 +169,23 @@ class LigandEncoder:
             fp_matrix:    scipy.sparse.csr_matrix (N, TOTAL_FINGERPRINT_BITS) int32.
             desc_matrix:  np.ndarray (N, 15) float32.
         """
+        cached_cid_to_row: Dict[int, int] = {}
+        cached_fp: Optional[sp.csr_matrix] = None
+        cached_desc: Optional[np.ndarray] = None
+
         if cache_dir is not None:
             cached = self._load_batch_cache(cache_dir)
             if cached is not None:
-                logger.info("Loaded ligand features from cache (%d CIDs).", len(cached[0]))
-                return cached
+                cached_cid_to_row, cached_fp, cached_desc = cached
+                missing = {c: s for c, s in cid_smiles.items() if c not in cached_cid_to_row}
+                if not missing:
+                    logger.info("Loaded all %d ligand features from cache.", len(cached_cid_to_row))
+                    return cached_cid_to_row, cached_fp, cached_desc
+                logger.info(
+                    "Cache has %d CIDs; encoding %d new CIDs...",
+                    len(cached_cid_to_row), len(missing),
+                )
+                cid_smiles = missing
 
         logger.info("Encoding %d ligands...", len(cid_smiles))
         results: Dict[int, Dict] = {}
@@ -224,6 +236,15 @@ class LigandEncoder:
             desc_data[row_idx] = r["descriptors"]
 
         fp_sparse = sp.csr_matrix(fp_data, dtype=np.int32)
+
+        # Merge with previously cached data if we only encoded missing CIDs
+        if cached_fp is not None and len(cached_cid_to_row) > 0:
+            offset = cached_fp.shape[0]
+            merged_cid_to_row = {**cached_cid_to_row,
+                                  **{cid: row + offset for cid, row in cid_to_row.items()}}
+            merged_fp = sp.vstack([cached_fp, fp_sparse], format="csr")
+            merged_desc = np.vstack([cached_desc, desc_data])
+            cid_to_row, fp_sparse, desc_data = merged_cid_to_row, merged_fp, merged_desc
 
         if cache_dir is not None:
             self._save_batch_cache(cache_dir, (cid_to_row, fp_sparse, desc_data))
@@ -295,9 +316,15 @@ class LigandEncoder:
 
     # ── Cache helpers ─────────────────────────────────────────────────────────
 
+    def _cache_path(self, cache_dir: Path) -> Path:
+        key = (f"r{self.morgan_radius}_b{self.morgan_bits}"
+               f"_maccs{int(self.use_maccs)}_ap{int(self.use_atompair)}"
+               f"_counts{int(self.morgan_use_counts)}")
+        return cache_dir / f"ligand_features_{key}.pkl"
+
     def _load_batch_cache(self, cache_dir: Path):
         import pickle
-        p = cache_dir / "ligand_features.pkl"
+        p = self._cache_path(cache_dir)
         if p.exists():
             with p.open("rb") as f:
                 return pickle.load(f)
@@ -306,6 +333,6 @@ class LigandEncoder:
     def _save_batch_cache(self, cache_dir: Path, data) -> None:
         import pickle
         cache_dir.mkdir(parents=True, exist_ok=True)
-        p = cache_dir / "ligand_features.pkl"
+        p = self._cache_path(cache_dir)
         with p.open("wb") as f:
             pickle.dump(data, f, protocol=pickle.HIGHEST_PROTOCOL)

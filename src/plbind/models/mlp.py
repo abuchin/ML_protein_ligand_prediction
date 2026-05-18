@@ -241,9 +241,10 @@ class InteractionMLPModel(BaseModel):
         self._ligand_test = lig_te_s
         self._aux_test = aux_te_s
         self.y_test = y_test.astype(np.int32)
+        self._train_pos_rate = float(y_train.mean())
         logger.info(
-            "InteractionMLP data set: %d train batches, %d val batches, %d test rows.",
-            len(self._train_dl), len(self._val_dl), len(y_test),
+            "InteractionMLP data set: %d train batches, %d val batches, %d test rows (pos_rate=%.3f).",
+            len(self._train_dl), len(self._val_dl), len(y_test), self._train_pos_rate,
         )
 
     # ── BaseModel abstract methods ────────────────────────────────────────────
@@ -266,7 +267,10 @@ class InteractionMLPModel(BaseModel):
         self._net = self._initialize_model()
         optimizer = torch.optim.Adam(self._net.parameters(), lr=self.lr, weight_decay=1e-5)
         scheduler = ReduceLROnPlateau(optimizer, mode="min", patience=self.lr_scheduler_patience, factor=0.5)
-        criterion = FocalLoss(gamma=2.0, alpha=0.25)
+        pos_rate = getattr(self, "_train_pos_rate", 0.5)
+        alpha = max(0.1, 1.0 - pos_rate)
+        criterion = FocalLoss(gamma=2.0, alpha=alpha)
+        logger.info("FocalLoss: alpha=%.3f (pos_rate=%.3f)", alpha, pos_rate)
         use_amp = self._device.type == "cuda"
         scaler = torch.amp.GradScaler("cuda") if use_amp else None
 

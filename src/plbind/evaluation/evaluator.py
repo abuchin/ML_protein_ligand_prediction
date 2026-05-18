@@ -21,6 +21,7 @@ from sklearn.calibration import CalibratedClassifierCV, calibration_curve
 from sklearn.metrics import (
     accuracy_score,
     average_precision_score,
+    balanced_accuracy_score,
     confusion_matrix,
     f1_score,
     precision_score,
@@ -49,13 +50,18 @@ class ModelEvaluator:
             accuracy, f1_binary (positive class), f1_macro, precision_binary,
             recall_binary, roc_auc, pr_auc, confusion_matrix.
         """
+        pos_rate = float(y_true.mean())
         metrics: Dict[str, Any] = {
             "accuracy": float(accuracy_score(y_true, y_pred)),
+            "balanced_accuracy": float(balanced_accuracy_score(y_true, y_pred)),
             "f1_binary": float(f1_score(y_true, y_pred, average="binary", zero_division=0)),
             "f1_macro": float(f1_score(y_true, y_pred, average="macro", zero_division=0)),
             "precision_binary": float(precision_score(y_true, y_pred, average="binary", zero_division=0)),
             "recall_binary": float(recall_score(y_true, y_pred, average="binary", zero_division=0)),
             "confusion_matrix": confusion_matrix(y_true, y_pred).tolist(),
+            "test_pos_rate": pos_rate,
+            "majority_class_accuracy": float(max(pos_rate, 1.0 - pos_rate)),
+            "majority_class_pr_auc": pos_rate,
         }
 
         if y_proba is not None:
@@ -79,51 +85,81 @@ class ModelEvaluator:
         cv: int = 5,
         scoring: Optional[List[str]] = None,
         random_state: int = 42,
+        df: Optional[pd.DataFrame] = None,
     ) -> Dict[str, Dict[str, float]]:
-        """Run CV with optional protein-aware grouping.
+        """Run CV with optional protein-aware grouping and ligand debleed.
 
         Args:
             estimator: sklearn-compatible estimator (with fit/predict_proba).
             X:         Feature matrix (already scaled).
             y:         Binary labels.
             groups:    Group labels for GroupKFold (e.g., UniProt_IDs).
-                       If provided, uses StratifiedGroupKFold to prevent leakage.
+                       If provided, uses StratifiedGroupKFold to prevent protein leakage.
             cv:        Number of folds.
             scoring:   Metric names; defaults to [f1_macro, roc_auc, average_precision].
+            df:        DataFrame aligned with X/y containing pubchem_cid column.
+                       When provided, val rows whose CID appears in train are removed,
+                       preventing ligand leakage across folds.
 
         Returns:
             Dict of metric_name → {"mean": float, "std": float}.
         """
+        from sklearn.pipeline import Pipeline
+        from sklearn.preprocessing import StandardScaler
+
         if scoring is None:
             scoring = ["f1_macro", "roc_auc", "average_precision"]
 
         if groups is not None:
             splitter = StratifiedGroupKFold(n_splits=cv, shuffle=True, random_state=random_state)
-            logger.info("CV: StratifiedGroupKFold (n_splits=%d) — protein-aware, no leakage.", cv)
+            logger.info("CV: StratifiedGroupKFold (n_splits=%d) — protein-aware.", cv)
         else:
             splitter = StratifiedKFold(n_splits=cv, shuffle=True, random_state=random_state)
             logger.info("CV: StratifiedKFold (n_splits=%d).", cv)
 
-        from sklearn.pipeline import Pipeline
-        from sklearn.preprocessing import StandardScaler
+        cids = df["pubchem_cid"].values if df is not None and "pubchem_cid" in df.columns else None
 
-        # Wrap in pipeline so scaler is fitted inside each fold
-        pipe = Pipeline([("scaler", StandardScaler()), ("clf", estimator)])
+        metric_scores: Dict[str, List[float]] = {m: [] for m in scoring}
 
-        cv_results = cross_validate(
-            pipe, X, y,
-            groups=groups,
-            cv=splitter,
-            scoring=scoring,
-            n_jobs=1,
-            return_train_score=False,
-        )
+        for fold_idx, (train_idx, val_idx) in enumerate(splitter.split(X, y, groups)):
+            # Ligand debleed: remove val rows whose CID appeared in training fold
+            if cids is not None:
+                train_cids = set(cids[train_idx])
+                val_idx = np.array([i for i in val_idx if cids[i] not in train_cids])
+                if len(val_idx) == 0:
+                    logger.warning("Fold %d: all val rows removed by ligand debleed — skipping.", fold_idx)
+                    continue
+
+            X_tr, X_val = X[train_idx], X[val_idx]
+            y_tr, y_val = y[train_idx], y[val_idx]
+
+            if len(np.unique(y_val)) < 2:
+                logger.warning("Fold %d: val set has only one class after debleed — skipping.", fold_idx)
+                continue
+
+            pipe = Pipeline([("scaler", StandardScaler()), ("clf", estimator)])
+            pipe.fit(X_tr, y_tr)
+
+            y_val_pred = pipe.predict(X_val)
+            y_val_proba = pipe.predict_proba(X_val)[:, 1] if hasattr(pipe, "predict_proba") else None
+
+            for metric in scoring:
+                try:
+                    if metric == "roc_auc":
+                        score = float(roc_auc_score(y_val, y_val_proba))
+                    elif metric == "average_precision":
+                        score = float(average_precision_score(y_val, y_val_proba))
+                    elif metric == "f1_macro":
+                        score = float(f1_score(y_val, y_val_pred, average="macro", zero_division=0))
+                    else:
+                        score = float("nan")
+                    metric_scores[metric].append(score)
+                except Exception as exc:
+                    logger.warning("Fold %d metric %s failed: %s", fold_idx, metric, exc)
 
         summary: Dict[str, Dict[str, float]] = {}
-        for metric in scoring:
-            key = f"test_{metric}"
-            if key in cv_results:
-                vals = cv_results[key]
+        for metric, vals in metric_scores.items():
+            if vals:
                 summary[metric] = {"mean": float(np.mean(vals)), "std": float(np.std(vals))}
                 logger.info("CV %s: %.4f ± %.4f", metric, summary[metric]["mean"], summary[metric]["std"])
         return summary

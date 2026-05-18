@@ -68,14 +68,30 @@ class DataPreprocessor:
         df = self._create_labels(df)
 
         positives = df[df["bound"] == 1].copy()
+        real_negatives = df[df["bound"] == 0].copy()
         n_pos = len(positives)
+        n_real_neg = len(real_negatives)
         logger.info("Positive pairs after labeling: %d", n_pos)
+        logger.info("Real non-binders available: %d (ratio %.2f)", n_real_neg, n_real_neg / max(n_pos, 1))
 
-        negatives = self._create_negatives(positives, df, smiles_map)
+        n_target = int(n_pos * self.negative_ratio)
+        if n_real_neg >= n_target:
+            negatives = real_negatives.sample(n=n_target, random_state=self.random_state)
+            logger.info("Using %d real non-binders (subsampled from %d)", n_target, n_real_neg)
+        else:
+            n_synthetic = n_target - n_real_neg
+            synthetic = self._create_negatives(positives, df, smiles_map, n_target=n_synthetic)
+            negatives = pd.concat([real_negatives, synthetic], ignore_index=True)
+            logger.info("Using %d real + %d synthetic negatives", n_real_neg, len(synthetic))
+
         n_neg = len(negatives)
-        logger.info("Negative pairs generated: %d  (ratio %.2f)", n_neg, n_neg / max(n_pos, 1))
+        logger.info("Negative pairs total: %d  (ratio %.2f)", n_neg, n_neg / max(n_pos, 1))
 
         combined = pd.concat([positives, negatives], ignore_index=True)
+        before_dedup = len(combined)
+        combined = combined.drop_duplicates(subset=["UniProt_ID", "pubchem_cid"])
+        if len(combined) < before_dedup:
+            logger.info("Dropped %d duplicate (protein, ligand) pairs.", before_dedup - len(combined))
         combined = combined.sample(frac=1, random_state=self.random_state).reset_index(drop=True)
         logger.info("Combined dataset: %d rows  (positive rate %.3f)", len(combined), combined["bound"].mean())
         return combined
@@ -139,6 +155,7 @@ class DataPreprocessor:
         positives: pd.DataFrame,
         all_data: pd.DataFrame,
         smiles_map: Optional[Dict[int, str]],
+        n_target: Optional[int] = None,
     ) -> pd.DataFrame:
         """Generate negative (non-binding) pairs.
 
@@ -147,7 +164,8 @@ class DataPreprocessor:
             with similar physicochemical properties (MW, logP, charge, rotatable bonds).
         Strategy 2 (fallback): Random permutation of pubchem_cid values.
         """
-        n_target = int(len(positives) * self.negative_ratio)
+        if n_target is None:
+            n_target = int(len(positives) * self.negative_ratio)
         known_positives = set(zip(positives["UniProt_ID"], positives["pubchem_cid"]))
         candidate_cids = all_data["pubchem_cid"].unique().tolist()
 

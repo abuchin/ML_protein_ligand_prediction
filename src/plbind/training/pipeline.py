@@ -121,6 +121,13 @@ class TrainingPipeline:
             "lightgbm": ModelFactory.create("lightgbm", random_state=self.random_seed),
         }
 
+        neg_count = int((y_train == 0).sum())
+        pos_count = int((y_train == 1).sum())
+        xgb_scale_pos_weight = neg_count / max(pos_count, 1)
+        sklearn_models["xgboost"].model.set_params(scale_pos_weight=xgb_scale_pos_weight)
+        logger.info("XGBoost scale_pos_weight set to %.3f (neg=%d, pos=%d)",
+                    xgb_scale_pos_weight, neg_count, pos_count)
+
         results = {}
         for name, model in sklearn_models.items():
             logger.info("--- %s ---", name)
@@ -181,7 +188,7 @@ class TrainingPipeline:
                 logger.info("CV: %s ...", cv_name)
                 cv_result = ModelEvaluator.cross_validate(
                     estimator, X, y, groups=groups_all, cv=CFG.cv_folds,
-                    random_state=self.random_seed,
+                    random_state=self.random_seed, df=df,
                 )
                 results[f"cv_{cv_name}"] = cv_result
                 logger.info(

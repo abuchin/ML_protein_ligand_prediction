@@ -148,27 +148,28 @@ class Splitter:
         return train, val, test
 
     def cold_both_split(self, df: pd.DataFrame, **kwargs) -> _SPLIT:
-        """Both proteins and ligands unseen in test — hardest and most realistic.
+        """Both proteins AND ligands fully unseen in test — hardest and most realistic.
 
-        Filters test rows where the ligand appeared as a BINDER (bound==1) in any
-        training protein. This prevents the model from leveraging prior knowledge of
-        a drug's binding profile. Artificial decoys are not filtered — they were
-        generated from the shared pool and filtering them would leave a degenerate
-        all-positive test set.
+        Proteins: cold-protein split (no UniProt_ID overlap between partitions).
+        Ligands:  any pubchem_cid appearing in train or val (bound=0 or 1) is
+                  excluded from test — enforcing true cold-ligand.
         """
         train, val, test = self.cold_protein_split(df, **kwargs)
-        # Only filter ligands the model has seen BINDING to a training protein
-        train_pos_cids = (
-            set(train.loc[train["bound"] == 1, "pubchem_cid"])
-            | set(val.loc[val["bound"] == 1, "pubchem_cid"])
-        )
-        test = test[~test["pubchem_cid"].isin(train_pos_cids)]
+
+        seen_cids = set(train["pubchem_cid"]) | set(val["pubchem_cid"])
+        before = len(test)
+        test = test[~test["pubchem_cid"].isin(seen_cids)]
+
         pos_rate = test["bound"].mean() if len(test) > 0 else float("nan")
         logger.info(
-            "cold_both: test set %d rows, pos_rate=%.3f "
-            "(filtered %d ligands known to bind training proteins).",
-            len(test), pos_rate, len(train_pos_cids),
+            "cold_both: test set %d rows (dropped %d with seen CIDs), pos_rate=%.3f",
+            len(test), before - len(test), pos_rate,
         )
+        if len(test) < 100:
+            logger.warning(
+                "cold_both test set is very small (%d rows). Consider using cold_protein "
+                "or cold_ligand instead, or expanding the dataset.", len(test)
+            )
         return train, val, test
 
     # ── Helpers ───────────────────────────────────────────────────────────────

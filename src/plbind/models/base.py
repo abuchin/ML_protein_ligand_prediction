@@ -54,21 +54,10 @@ class BaseModel(ABC):
 
     # ── Concrete methods ──────────────────────────────────────────────────────
 
-    def split_data(self, X: np.ndarray, y: np.ndarray) -> None:
-        """Split into train/test and fit StandardScaler on train only."""
-        from sklearn.model_selection import train_test_split
-
-        X_train, X_test, y_train, y_test = train_test_split(
-            X, y, stratify=y, test_size=self.test_size, random_state=self.random_state
-        )
-        self.scaler = StandardScaler()
-        self.X_train = self.scaler.fit_transform(X_train).astype(np.float32)
-        self.X_test = self.scaler.transform(X_test).astype(np.float32)
-        self.y_train = y_train.astype(np.int32) if hasattr(y_train, "astype") else np.array(y_train, dtype=np.int32)
-        self.y_test = y_test.astype(np.int32) if hasattr(y_test, "astype") else np.array(y_test, dtype=np.int32)
-        logger.info(
-            "%s split: %d train / %d test  (pos_rate_train=%.3f)",
-            self.model_name, len(self.X_train), len(self.X_test), self.y_train.mean(),
+    def split_data(self, *args, **kwargs) -> None:
+        raise RuntimeError(
+            "BaseModel.split_data() is deprecated and must not be called. "
+            "Supply pre-split X_train / X_test directly via pipeline.py."
         )
 
     def train(self) -> None:
